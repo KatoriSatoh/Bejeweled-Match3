@@ -27,12 +27,19 @@ using System.Collections.Generic;
 public class BoardManager : MonoBehaviour {
 	public static BoardManager instance;
 	public List<Sprite> characters = new List<Sprite>();
+	public List<Sprite> specialChars = new List<Sprite> ();
 	public GameObject tile;
 	public int xSize, ySize;
 
 	private GameObject[,] tiles;
 
+	private float remainingTime;
+
 	public bool IsShifting { get; set; }
+
+	void Awake () {
+		remainingTime = 30.0f;
+	}
 
 	void Start () {
 		instance = GetComponent<BoardManager>();
@@ -40,6 +47,15 @@ public class BoardManager : MonoBehaviour {
 		Vector2 offset = tile.GetComponent<SpriteRenderer>().bounds.size;
         CreateBoard(offset.x, offset.y);
     }
+
+	void Update () {
+		remainingTime -= Time.deltaTime;
+		if (remainingTime <= 0) {
+			remainingTime = 0;
+		}
+
+		GUIManager.instance.MoveCounter = (int)Mathf.Ceil (remainingTime);
+	}
 
 	private void CreateBoard (float xOffset, float yOffset) {
 		tiles = new GameObject[xSize, ySize];
@@ -76,7 +92,7 @@ public class BoardManager : MonoBehaviour {
 			for (int y = 0; y < ySize; y++) {
 				if (tiles [x, y].GetComponent<SpriteRenderer> ().sprite == null) {
 					yield return StartCoroutine (ShiftTilesDown (x, y));
-					break;
+					//break;
 				}
 			}
 		}
@@ -95,16 +111,22 @@ public class BoardManager : MonoBehaviour {
 
 		for (int y = yStart; y < ySize; y++) {
 			SpriteRenderer render = tiles [x, y].GetComponent<SpriteRenderer> ();
+			renders.Add (render);
+
 			if (render.sprite == null) {
 				nullCount++;
+			} else {
+				break;
 			}
-			renders.Add (render);
 		}
 
 		for (int i = 0; i < nullCount; i++) {
 			GUIManager.instance.Score += 10;
 
 			yield return new WaitForSeconds (shiftDelay);
+			if (renders.Count == 1) {
+				renders [0].sprite = GetNewSprite (x, ySize - 1);
+			}
 			for (int k = 0; k < renders.Count - 1; k++) {
 				renders [k].sprite = renders [k + 1].sprite;
 				renders [k + 1].sprite = GetNewSprite(x, ySize - 1);

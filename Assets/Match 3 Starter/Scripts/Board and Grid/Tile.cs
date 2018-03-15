@@ -85,7 +85,7 @@ public class Tile : MonoBehaviour {
 		render.sprite = tmpSprite;
 		SFXManager.instance.PlaySFX (Clip.Swap);
 
-		GUIManager.instance.MoveCounter--;
+		//GUIManager.instance.MoveCounter--;
 	}
 
 	private GameObject GetAdjacent(Vector2 castDir) {
@@ -118,7 +118,7 @@ public class Tile : MonoBehaviour {
 		return matchingTiles;
 	}
 
-	private void ClearMatch(Vector2[] paths) {
+	private int ClearMatch(Vector2[] paths) {
 		List<GameObject> matchingTiles = new List<GameObject> ();
 		for (int i = 0; i < paths.Length; i++) {
 			matchingTiles.AddRange (FindMatch (paths [i]));
@@ -128,17 +128,27 @@ public class Tile : MonoBehaviour {
 				matchingTiles [i].GetComponent<SpriteRenderer> ().sprite = null;
 			}
 			matchFound = true;
+
+			return matchingTiles.Count;
 		}
+		return 0;
 	}
 
 	public void ClearAllMatches() {
 		if (render.sprite == null)
 			return;
 
-		ClearMatch (new Vector2[2] { Vector2.left, Vector2.right });
-		ClearMatch (new Vector2[2] { Vector2.up, Vector2.down });
+		int h = ClearMatch (new Vector2[2] { Vector2.left, Vector2.right });
+		int v = ClearMatch (new Vector2[2] { Vector2.up, Vector2.down });
+
 		if (matchFound) {
-			render.sprite = null;
+			if (h + v < 3) {
+				render.sprite = null;
+			} else if (h + v < 5) {
+				render.sprite = BoardManager.instance.specialChars [h + v - 3];
+			} else {
+				render.sprite = BoardManager.instance.specialChars [2];
+			}
 			matchFound = false;
 
 			StopCoroutine (BoardManager.instance.FindNullTiles ());
