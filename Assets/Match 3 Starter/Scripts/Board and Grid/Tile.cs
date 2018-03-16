@@ -33,6 +33,8 @@ public class Tile : MonoBehaviour {
 	private bool matchFound = false;
 
 	private Vector2[] adjacentDirections = new Vector2[] { Vector2.up, Vector2.down, Vector2.left, Vector2.right };
+	private Vector2[] aroundDirections = new Vector2[] { Vector2.up, Vector2.down, Vector2.left, Vector2.right, 
+														 Vector2.up + Vector2.left, Vector2.up + Vector2.right, Vector2.down + Vector2.left, Vector2.down + Vector2.right };
 
 	void Awake() {
 		render = GetComponent<SpriteRenderer>();
@@ -51,6 +53,10 @@ public class Tile : MonoBehaviour {
 		previousSelected = null;
 	}
 
+	private bool IsSpecialTile() {
+		return BoardManager.instance.specialChars.Contains (render.sprite);
+	}
+
 	void OnMouseDown() {
 		if (render.sprite == null || BoardManager.instance.IsShifting) {
 			return;
@@ -60,15 +66,32 @@ public class Tile : MonoBehaviour {
 			Deselect ();
 		} else {
 			if (previousSelected == null) {
+				if (IsSpecialTile()) {
+					TriggerSpecialTile ();
+					return;
+				}
+
 				Select ();
 			} else {
 				if (GetAllAdjacentTiles ().Contains (previousSelected.gameObject)) {
+					if (IsSpecialTile ()) {
+						previousSelected.Deselect ();
+						TriggerSpecialTile ();
+						return;
+					}
+
 					SwapSprite (previousSelected.render);
 					previousSelected.ClearAllMatches();
 					previousSelected.Deselect ();
 					ClearAllMatches ();
 				} else {
 					previousSelected.GetComponent<Tile> ().Deselect ();
+
+					if (IsSpecialTile()) {
+						TriggerSpecialTile ();
+						return;
+					}
+
 					Select ();
 				}
 			}
@@ -144,10 +167,9 @@ public class Tile : MonoBehaviour {
 		if (matchFound) {
 			if (h + v < 3) {
 				render.sprite = null;
-			} else if (h + v < 5) {
-				render.sprite = BoardManager.instance.specialChars [h + v - 3];
 			} else {
-				render.sprite = BoardManager.instance.specialChars [2];
+				render.sprite = BoardManager.instance.specialChars [0];
+				GUIManager.instance.Score += 10;
 			}
 			matchFound = false;
 
@@ -156,5 +178,52 @@ public class Tile : MonoBehaviour {
 
 			SFXManager.instance.PlaySFX (Clip.Clear);
 		}
+	}
+
+	private void ExplodeTilesAround() {
+		List<GameObject> aroundTiles = new List<GameObject> ();
+		for (int i = 0; i < aroundDirections.Length; i++) {
+			RaycastHit2D hit = Physics2D.Raycast (transform.position, aroundDirections [i]);
+			Debug.Log (hit.transform.position);
+			if (hit.collider != null) {
+				aroundTiles.Add (hit.collider.gameObject);
+			}
+		}
+		for (int i = 0; i < aroundTiles.Count; i++) {
+			Debug.Log (aroundTiles [i].GetComponent<SpriteRenderer>().sprite);
+			aroundTiles [i].GetComponent<SpriteRenderer> ().sprite = null;
+		}
+	}
+
+	private void ExplodeCrossLine() {
+		List<GameObject> crossTiles = new List<GameObject> ();
+		for (int i = 0; i < adjacentDirections.Length; i++) {
+			RaycastHit2D hit = Physics2D.Raycast (transform.position, adjacentDirections [i]);
+			while (hit.collider != null) {
+				crossTiles.Add (hit.collider.gameObject);
+				hit = Physics2D.Raycast (hit.collider.transform.position, adjacentDirections [i]);
+			}
+		}
+		for (int i = 0; i < crossTiles.Count; i++) {
+			crossTiles [i].GetComponent<SpriteRenderer> ().sprite = null;
+		}
+	}
+
+	private void TriggerSpecialTile() {
+		if (render.sprite == null)
+			return;
+
+		if (render.sprite == BoardManager.instance.specialChars [0]) {
+			ExplodeTilesAround ();
+			render.sprite = null;
+		} else {
+			ExplodeCrossLine ();
+			render.sprite = null;
+		}
+
+		StopCoroutine (BoardManager.instance.FindNullTiles ());
+		StartCoroutine (BoardManager.instance.FindNullTiles ());
+
+		SFXManager.instance.PlaySFX (Clip.Clear);
 	}
 }
