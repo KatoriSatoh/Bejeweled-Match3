@@ -23,6 +23,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.UI;
 
 public class BoardManager : MonoBehaviour {
 	public static BoardManager instance;
@@ -31,14 +32,23 @@ public class BoardManager : MonoBehaviour {
 	public GameObject tile;
 	public int xSize, ySize;
 
+	public Slider frenzyBar;
+
 	private GameObject[,] tiles;
 
-	private float remainingTime;
+	private float remainingTime, frenzyTimeCurrent, frenzyTimeMax;
+	private float frenzyDisplay, frenzyCurrent, frenzyMax;
 
 	public bool IsShifting { get; set; }
+	public bool IsFrenzy { get; set; }
 
 	void Awake () {
 		remainingTime = 30.0f;
+		frenzyTimeMax = 5.0f;
+		frenzyMax = 10.0f;
+		frenzyDisplay = frenzyCurrent = frenzyTimeCurrent = 0.0f;
+
+		IsFrenzy = false;
 	}
 
 	void Start () {
@@ -54,7 +64,8 @@ public class BoardManager : MonoBehaviour {
 			remainingTime = 0;
 		}
 
-		GUIManager.instance.MoveCounter = (int)Mathf.Ceil (remainingTime);
+		UpdateFrenzyBar ();
+		GUIManager.instance.Time = (int)Mathf.Ceil (remainingTime);
 	}
 
 	private void CreateBoard (float xOffset, float yOffset) {
@@ -122,6 +133,7 @@ public class BoardManager : MonoBehaviour {
 
 		for (int i = 0; i < nullCount; i++) {
 			GUIManager.instance.Score += 10;
+			frenzyCurrent += 1.0f;
 
 			yield return new WaitForSeconds (shiftDelay);
 			if (renders.Count == 1) {
@@ -151,5 +163,26 @@ public class BoardManager : MonoBehaviour {
 		}
 
 		return possibleCharacters [Random.Range (0, possibleCharacters.Count)];
+	}
+
+	private void UpdateFrenzyBar() {
+		if (frenzyDisplay < frenzyCurrent) {
+			frenzyDisplay += 5 * Time.deltaTime;
+			if (frenzyDisplay >= frenzyCurrent)
+				frenzyDisplay = frenzyCurrent;
+		}
+		if (frenzyDisplay > frenzyCurrent) {
+			frenzyDisplay -= 5 * Time.deltaTime;
+			if (frenzyDisplay <= frenzyCurrent)
+				frenzyDisplay = frenzyCurrent;
+		}
+
+		frenzyBar.value = frenzyDisplay / frenzyMax;
+	}
+
+	private void StartFrenzyMode() {
+		frenzyCurrent = frenzyMax;
+
+		IsFrenzy = true;
 	}
 }

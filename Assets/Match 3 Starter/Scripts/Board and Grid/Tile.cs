@@ -33,8 +33,6 @@ public class Tile : MonoBehaviour {
 	private bool matchFound = false;
 
 	private Vector2[] adjacentDirections = new Vector2[] { Vector2.up, Vector2.down, Vector2.left, Vector2.right };
-	private Vector2[] aroundDirections = new Vector2[] { Vector2.up, Vector2.down, Vector2.left, Vector2.right, 
-														 Vector2.up + Vector2.left, Vector2.up + Vector2.right, Vector2.down + Vector2.left, Vector2.down + Vector2.right };
 
 	void Awake() {
 		render = GetComponent<SpriteRenderer>();
@@ -107,8 +105,6 @@ public class Tile : MonoBehaviour {
 		render2.sprite = render.sprite;
 		render.sprite = tmpSprite;
 		SFXManager.instance.PlaySFX (Clip.Swap);
-
-		//GUIManager.instance.MoveCounter--;
 	}
 
 	private GameObject GetAdjacent(Vector2 castDir) {
@@ -182,16 +178,28 @@ public class Tile : MonoBehaviour {
 
 	private void ExplodeTilesAround() {
 		List<GameObject> aroundTiles = new List<GameObject> ();
-		for (int i = 0; i < aroundDirections.Length; i++) {
-			RaycastHit2D hit = Physics2D.Raycast (transform.position, aroundDirections [i]);
-			Debug.Log (hit.transform.position);
+		for (int i = 0; i < adjacentDirections.Length; i++) {
+			RaycastHit2D hit = Physics2D.Raycast (transform.position, adjacentDirections [i]);
 			if (hit.collider != null) {
 				aroundTiles.Add (hit.collider.gameObject);
+
+				if (adjacentDirections [i] == Vector2.up || adjacentDirections [i] == Vector2.down) {
+					RaycastHit2D left = Physics2D.Raycast (hit.collider.transform.position, Vector2.left);
+					RaycastHit2D right = Physics2D.Raycast (hit.collider.transform.position, Vector2.right);
+
+					if (left.collider != null)
+						aroundTiles.Add (left.collider.gameObject);
+					if (right.collider != null)
+						aroundTiles.Add (right.collider.gameObject);
+				}
 			}
 		}
 		for (int i = 0; i < aroundTiles.Count; i++) {
-			Debug.Log (aroundTiles [i].GetComponent<SpriteRenderer>().sprite);
-			aroundTiles [i].GetComponent<SpriteRenderer> ().sprite = null;
+			if (aroundTiles [i].GetComponent<Tile> ().IsSpecialTile ()) {
+				aroundTiles [i].GetComponent<Tile> ().TriggerSpecialTile ();
+			} else {
+				aroundTiles [i].GetComponent<SpriteRenderer> ().sprite = null;
+			}
 		}
 	}
 
@@ -214,11 +222,11 @@ public class Tile : MonoBehaviour {
 			return;
 
 		if (render.sprite == BoardManager.instance.specialChars [0]) {
+			render.sprite = null;
 			ExplodeTilesAround ();
-			render.sprite = null;
 		} else {
-			ExplodeCrossLine ();
 			render.sprite = null;
+			ExplodeCrossLine ();
 		}
 
 		StopCoroutine (BoardManager.instance.FindNullTiles ());

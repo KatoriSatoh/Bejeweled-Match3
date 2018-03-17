@@ -32,10 +32,10 @@ public class GUIManager : MonoBehaviour {
 	public Text highScoreTxt;
 
 	public Text scoreTxt;
-	public Text moveCounterTxt;
+	public Text timeTxt;
 
 	private int score;
-	private int moveCounter;
+	private int time;
 
 	public int Score {
 		get {
@@ -48,25 +48,25 @@ public class GUIManager : MonoBehaviour {
 		}
 	}
 
-	public int MoveCounter {
+	public int Time {
 		get {
-			return moveCounter;
+			return time;
 		}
 
 		set {
-			moveCounter = value;
-			moveCounterTxt.text = moveCounter.ToString ();
+			time = value;
+			timeTxt.text = time.ToString ();
 
-			if (moveCounter <= 0) {
-				moveCounter = 0;
+			if (time <= 0) {
+				time = 0;
 				StartCoroutine (WaitForShifting());
 			}
 		}
 	}
 
 	void Awake() {
-		moveCounter = 30;
-		moveCounterTxt.text = moveCounter.ToString ();
+		time = 30;
+		timeTxt.text = time.ToString ();
 
 		instance = GetComponent<GUIManager>();
 	}
