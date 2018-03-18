@@ -213,7 +213,11 @@ public class Tile : MonoBehaviour {
 			}
 		}
 		for (int i = 0; i < crossTiles.Count; i++) {
-			crossTiles [i].GetComponent<SpriteRenderer> ().sprite = null;
+			if (crossTiles [i].GetComponent<Tile> ().IsSpecialTile ()) {
+				crossTiles [i].GetComponent<Tile> ().TriggerSpecialTile ();
+			} else {
+				crossTiles [i].GetComponent<SpriteRenderer> ().sprite = null;
+			}
 		}
 	}
 

@@ -27,7 +27,7 @@ using UnityEngine.UI;
 
 public class BoardManager : MonoBehaviour {
 	public static BoardManager instance;
-	public List<Sprite> characters = new List<Sprite>();
+	public List<Sprite> characters = new List<Sprite> ();
 	public List<Sprite> specialChars = new List<Sprite> ();
 	public GameObject tile;
 	public int xSize, ySize;
@@ -36,8 +36,12 @@ public class BoardManager : MonoBehaviour {
 
 	private GameObject[,] tiles;
 
+	private List<GameObject> frenzyTiles = new List<GameObject> ();
+	private List<Sprite> frenzySprites = new List<Sprite> ();
+
 	private float remainingTime, frenzyTimeCurrent, frenzyTimeMax;
 	private float frenzyDisplay, frenzyCurrent, frenzyMax;
+	private int frenzyTileNumber = 4;
 
 	public bool IsShifting { get; set; }
 	public bool IsFrenzy { get; set; }
@@ -62,6 +66,28 @@ public class BoardManager : MonoBehaviour {
 		remainingTime -= Time.deltaTime;
 		if (remainingTime <= 0) {
 			remainingTime = 0;
+		}
+
+		if (IsFrenzy) {
+			frenzyCurrent -= frenzyMax / 5 * Time.deltaTime;
+			if (frenzyCurrent <= 0)
+				frenzyCurrent = 0;
+			
+			frenzyTimeCurrent += Time.deltaTime;
+			if (frenzyTimeCurrent >= 1) {
+				frenzyTimeCurrent -= 1;
+
+				ReturnFrenzyTilesToNormal ();
+				SpawnFrenzyTiles ();
+			}
+
+			frenzyTimeMax -= Time.deltaTime;
+			if (frenzyTimeMax <= 0) {
+				frenzyTimeMax = 5.0f;
+				IsFrenzy = false;
+
+				ReturnFrenzyTilesToNormal ();
+			}
 		}
 
 		UpdateFrenzyBar ();
@@ -133,7 +159,13 @@ public class BoardManager : MonoBehaviour {
 
 		for (int i = 0; i < nullCount; i++) {
 			GUIManager.instance.Score += 10;
-			frenzyCurrent += 1.0f;
+
+			if (!IsFrenzy) {
+				frenzyCurrent += 1.0f;
+				if (frenzyCurrent >= frenzyMax) {
+					StartFrenzyMode ();
+				}
+			}
 
 			yield return new WaitForSeconds (shiftDelay);
 			if (renders.Count == 1) {
@@ -182,7 +214,36 @@ public class BoardManager : MonoBehaviour {
 
 	private void StartFrenzyMode() {
 		frenzyCurrent = frenzyMax;
+		frenzyTimeMax = 5.0f;
+		frenzyTimeCurrent = 0.0f;
 
 		IsFrenzy = true;
+		SpawnFrenzyTiles ();
+	}
+
+	private void SpawnFrenzyTiles() {
+		frenzyTiles.Clear ();
+		frenzySprites.Clear ();
+
+		while (frenzyTiles.Count < frenzyTileNumber) {
+			int x = Random.Range (0, xSize - 1);
+			int y = Random.Range (0, ySize - 1);
+
+			if (!frenzyTiles.Contains (tiles [x, y])) {
+				frenzyTiles.Add (tiles [x, y]);
+				frenzySprites.Add (tiles [x, y].GetComponent<SpriteRenderer> ().sprite);
+			}
+		}
+
+		foreach (GameObject tile in frenzyTiles) {
+			tile.GetComponent<SpriteRenderer> ().sprite = specialChars [1];
+		}
+	}
+
+	private void ReturnFrenzyTilesToNormal() {
+		for (int i = 0; i < frenzyTiles.Count; i++) {
+			if (frenzyTiles [i].GetComponent<SpriteRenderer> ().sprite == specialChars[1])
+				frenzyTiles [i].GetComponent<SpriteRenderer> ().sprite = frenzySprites [i];
+		}
 	}
 }
