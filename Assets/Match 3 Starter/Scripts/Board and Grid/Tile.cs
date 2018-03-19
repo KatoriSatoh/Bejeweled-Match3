@@ -25,17 +25,45 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class Tile : MonoBehaviour {
-	private static Color selectedColor = new Color(.5f, .5f, .5f, 1.0f);
-	private static Tile previousSelected = null;
+    private static Color selectedColor = new Color(.5f, .5f, .5f, 1.0f);
+    private static Tile previousSelected = null;
 
-	private SpriteRenderer render;
-	private bool isSelected = false;
-	private bool matchFound = false;
+    public int xIndex { get; set; }
+    public int yIndex { get; set; }
+
+    private SpriteRenderer render;
+    private int xTarget, yTarget;
+    private bool isSelected = false;
+    private bool matchFound = false;
+    public bool isMoving { get; set; }
 
 	private Vector2[] adjacentDirections = new Vector2[] { Vector2.up, Vector2.down, Vector2.left, Vector2.right };
 
 	void Awake() {
 		render = GetComponent<SpriteRenderer>();
+
+        isMoving = false;
+    }
+
+    void Update()
+    {
+        if (isMoving)
+        {
+            float step = 5 * Time.deltaTime;
+            Vector2 offset = gameObject.GetComponent<SpriteRenderer>().bounds.size;
+            Vector3 target = new Vector3(BoardManager.instance.gameObject.transform.position.x + (offset.x * xTarget),
+                                         BoardManager.instance.gameObject.transform.position.y + (offset.y * yTarget), 0);
+
+            transform.position = Vector3.MoveTowards(transform.position, target, step);
+            if (transform.position == target)
+            {
+                xIndex = xTarget;
+                yIndex = yTarget;
+
+                isMoving = false;
+                ClearAllMatches();
+            }
+        }
     }
 
 	private void Select() {
@@ -52,11 +80,11 @@ public class Tile : MonoBehaviour {
 	}
 
 	private bool IsSpecialTile() {
-		return BoardManager.instance.specialChars.Contains (render.sprite);
+		return render.sprite == BoardManager.instance.explodeSprite || render.sprite == BoardManager.instance.specialSprite;
 	}
 
 	void OnMouseDown() {
-		if (render.sprite == null || BoardManager.instance.IsShifting) {
+		if (render.sprite == null || BoardManager.instance.IsShifting || BoardManager.instance.IsAnimating) {
 			return;
 		}
 
@@ -79,9 +107,6 @@ public class Tile : MonoBehaviour {
 					}
 
 					SwapSprite (previousSelected.render);
-					previousSelected.ClearAllMatches();
-					previousSelected.Deselect ();
-					ClearAllMatches ();
 				} else {
 					previousSelected.GetComponent<Tile> ().Deselect ();
 
@@ -96,14 +121,22 @@ public class Tile : MonoBehaviour {
 		}
 	}
 
-	public void SwapSprite(SpriteRenderer render2) {
-		if (render.sprite == render2.sprite) {
-			return;
-		}
+    public void MoveTo(int x, int y)
+    {
+        xTarget = x;
+        yTarget = y;
+        isMoving = true;
+    }
 
-		Sprite tmpSprite = render2.sprite;
-		render2.sprite = render.sprite;
-		render.sprite = tmpSprite;
+	public void SwapSprite(SpriteRenderer render2) {
+        int xTemp = previousSelected.xIndex;
+        int yTemp = previousSelected.yIndex;
+
+        previousSelected.MoveTo(xIndex, yIndex);
+        previousSelected.Deselect();
+
+        MoveTo(xTemp, yTemp);
+
 		SFXManager.instance.PlaySFX (Clip.Swap);
 	}
 
@@ -164,7 +197,7 @@ public class Tile : MonoBehaviour {
 			if (h + v < 3) {
 				render.sprite = null;
 			} else {
-				render.sprite = BoardManager.instance.specialChars [0];
+				render.sprite = BoardManager.instance.explodeSprite;
 				GUIManager.instance.Score += 10;
 			}
 			matchFound = false;
@@ -225,7 +258,7 @@ public class Tile : MonoBehaviour {
 		if (render.sprite == null)
 			return;
 
-		if (render.sprite == BoardManager.instance.specialChars [0]) {
+		if (render.sprite == BoardManager.instance.explodeSprite) {
 			render.sprite = null;
 			ExplodeTilesAround ();
 		} else {
