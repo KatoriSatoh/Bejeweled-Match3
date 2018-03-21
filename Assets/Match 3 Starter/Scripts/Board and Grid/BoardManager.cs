@@ -35,7 +35,7 @@ public class BoardManager : MonoBehaviour {
 
 	public Slider frenzyBar;
 
-	private GameObject[,] tiles;
+	public GameObject[,] tiles;
 
 	private List<GameObject> frenzyTiles = new List<GameObject> ();
 	private List<Sprite> frenzySprites = new List<Sprite> ();
@@ -43,6 +43,8 @@ public class BoardManager : MonoBehaviour {
 	private float remainingTime, frenzyTimeCurrent, frenzyTimeMax;
 	private float frenzyDisplay, frenzyCurrent, frenzyMax;
 	private int frenzyTileNumber = 4;
+
+    private Vector2 tileSize;
 
     public bool IsAnimating { get; set; }
 	public bool IsShifting { get; set; }
@@ -54,18 +56,19 @@ public class BoardManager : MonoBehaviour {
 		frenzyMax = 10.0f;
 		frenzyDisplay = frenzyCurrent = frenzyTimeCurrent = 0.0f;
 
+        tileSize = tile.GetComponent<SpriteRenderer>().bounds.size;
+
 		IsFrenzy = false;
 	}
 
 	void Start () {
 		instance = GetComponent<BoardManager>();
-
-		Vector2 offset = tile.GetComponent<SpriteRenderer>().bounds.size;
-		float boardWidth = offset.x * (xSize - 1);
-		float boardHeight = offset.y * (ySize - 1);
+        
+		float boardWidth = tileSize.x * (xSize - 1);
+		float boardHeight = tileSize.y * (ySize - 1);
 		gameObject.transform.position = new Vector3 (-boardWidth / 2, -boardHeight / 2, 0);
 
-        CreateBoard(offset.x, offset.y);
+        CreateBoard(tileSize.x, tileSize.y);
     }
 
 	void Update () {
@@ -104,7 +107,7 @@ public class BoardManager : MonoBehaviour {
 
     private bool CheckAnimating() {
         foreach (GameObject tile in tiles) {
-            if (tile.GetComponent<Tile>().isMoving)
+            if (tile.GetComponent<Tile>().isShifting)
             {
                 return true;
             }
@@ -144,22 +147,23 @@ public class BoardManager : MonoBehaviour {
         }
     }
 
+    public Vector3 CalculatePosition(int x, int y)
+    {
+        return new Vector3(transform.position.x + tileSize.x * x, transform.position.y + tileSize.y * y, 0);
+    }
+
 	public IEnumerator FindNullTiles() {
 		for (int x = 0; x < xSize; x++) {
-            int nullCount = 0;
 			for (int y = 0; y < ySize; y++) {
 				if (tiles [x, y].GetComponent<SpriteRenderer> ().sprite == null)
                 {
-                    nullCount++;
-					//yield return StartCoroutine (ShiftTilesDown (x, y));
+                    ShiftTilesDown(x, y);
+                    break;
 				}
-                if (nullCount > 0 && (tiles[x, y].GetComponent<SpriteRenderer>().sprite != null || y == ySize - 1))
-                {
-                    yield return StartCoroutine(ShiftTilesDown(x, y - nullCount, nullCount));
-                    nullCount = 0;
-                }
 			}
 		}
+
+        yield return new WaitUntil(() => !IsShifting);
 
 		for (int x = 0; x < xSize; x++) {
 			for (int y = 0; y < ySize; y++) {
@@ -168,38 +172,41 @@ public class BoardManager : MonoBehaviour {
 		}
 	}
 
-	private IEnumerator ShiftTilesDown(int x, int yStart, int num) {
+	private void ShiftTilesDown(int x, int yStart) {
 		IsShifting = true;
-		List<SpriteRenderer> renders = new List<SpriteRenderer> ();
 
-		for (int y = yStart; y < yStart + num; y++) {
-			SpriteRenderer render = tiles [x, y].GetComponent<SpriteRenderer> ();
-			renders.Add (render);
-		}
+        int shiftIndex = 0;
+        List<GameObject> nullTiles = new List<GameObject>();
 
-		for (int i = 0; i < num; i++) {
-			GUIManager.instance.Score += 10;
-
-			if (!IsFrenzy) {
-				frenzyCurrent += 1.0f;
-				if (frenzyCurrent >= frenzyMax) {
-					StartFrenzyMode ();
-				}
-			}
-
-			yield return new WaitForSeconds (.03f);
-            if (yStart + i >= ySize)
+		for (int y = yStart; y < ySize; y++) {
+			if (tiles[x, y].GetComponent<SpriteRenderer>().sprite == null)
             {
-
+                nullTiles.Add(tiles[x, y]);
             }
-			//if (renders.Count == 1) {
-			//	renders [0].sprite = GetNewSprite (x, ySize - 1);
-			//}
-			//for (int k = 0; k < renders.Count - 1; k++) {
-			//	renders [k].sprite = renders [k + 1].sprite;
-			//	renders [k + 1].sprite = GetNewSprite(x, ySize - 1);
-			//}
+            else
+            {
+                tiles[x, y].GetComponent<Tile>().ShiftTo(x, yStart + shiftIndex);
+                shiftIndex++;
+            }
 		}
+
+        shiftIndex = 0;
+        foreach (GameObject tile in nullTiles) {
+            tile.GetComponent<Tile>().MoveTo(x, ySize + shiftIndex);
+            tile.GetComponent<SpriteRenderer>().sprite = GetNewSprite(x, ySize + shiftIndex - nullTiles.Count);
+            tile.GetComponent<Tile>().ShiftTo(x, ySize + shiftIndex - nullTiles.Count);
+            shiftIndex++;
+        }
+
+        GUIManager.instance.Score += nullTiles.Count * 10;
+        if (!IsFrenzy)
+        {
+            frenzyCurrent += nullTiles.Count * 1.0f;
+            if (frenzyCurrent >= frenzyMax)
+            {
+                StartFrenzyMode();
+            }
+        }
 
 		IsShifting = false;
 	}

@@ -35,32 +35,31 @@ public class Tile : MonoBehaviour {
     private int xTarget, yTarget;
     private bool isSelected = false;
     private bool matchFound = false;
-    public bool isMoving { get; set; }
+    public bool isShifting { get; set; }
 
 	private Vector2[] adjacentDirections = new Vector2[] { Vector2.up, Vector2.down, Vector2.left, Vector2.right };
 
 	void Awake() {
 		render = GetComponent<SpriteRenderer>();
 
-        isMoving = false;
+        isShifting = false;
     }
 
     void Update()
     {
-        if (isMoving)
+        if (isShifting)
         {
             float step = 5 * Time.deltaTime;
-            Vector2 offset = gameObject.GetComponent<SpriteRenderer>().bounds.size;
-            Vector3 target = new Vector3(BoardManager.instance.gameObject.transform.position.x + (offset.x * xTarget),
-                                         BoardManager.instance.gameObject.transform.position.y + (offset.y * yTarget), 0);
+            Vector3 target = BoardManager.instance.CalculatePosition(xTarget, yTarget);
 
             transform.position = Vector3.MoveTowards(transform.position, target, step);
             if (transform.position == target)
             {
                 xIndex = xTarget;
                 yIndex = yTarget;
+                BoardManager.instance.tiles[xIndex, yIndex] = gameObject;
 
-                isMoving = false;
+                isShifting = false;
                 ClearAllMatches();
             }
         }
@@ -123,19 +122,27 @@ public class Tile : MonoBehaviour {
 
     public void MoveTo(int x, int y)
     {
+        xIndex = x;
+        yIndex = y;
+
+        transform.position = BoardManager.instance.CalculatePosition(x, y);
+    }
+
+    public void ShiftTo(int x, int y)
+    {
         xTarget = x;
         yTarget = y;
-        isMoving = true;
+        isShifting = true;
     }
 
 	public void SwapSprite(SpriteRenderer render2) {
         int xTemp = previousSelected.xIndex;
         int yTemp = previousSelected.yIndex;
 
-        previousSelected.MoveTo(xIndex, yIndex);
+        previousSelected.ShiftTo(xIndex, yIndex);
         previousSelected.Deselect();
 
-        MoveTo(xTemp, yTemp);
+        ShiftTo(xTemp, yTemp);
 
 		SFXManager.instance.PlaySFX (Clip.Swap);
 	}
