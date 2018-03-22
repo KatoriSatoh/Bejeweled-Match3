@@ -32,7 +32,6 @@ public class Tile : MonoBehaviour {
     public int yIndex { get; set; }
 
     private SpriteRenderer render;
-    private int xTarget, yTarget;
     private bool isSelected = false;
     private bool matchFound = false;
     public bool isShifting { get; set; }
@@ -50,15 +49,11 @@ public class Tile : MonoBehaviour {
         if (isShifting)
         {
             float step = 5 * Time.deltaTime;
-            Vector3 target = BoardManager.instance.CalculatePosition(xTarget, yTarget);
+            Vector3 target = BoardManager.instance.CalculatePosition(xIndex, yIndex);
 
             transform.position = Vector3.MoveTowards(transform.position, target, step);
             if (transform.position == target)
             {
-                xIndex = xTarget;
-                yIndex = yTarget;
-                BoardManager.instance.tiles[xIndex, yIndex] = gameObject;
-
                 isShifting = false;
                 ClearAllMatches();
             }
@@ -130,9 +125,11 @@ public class Tile : MonoBehaviour {
 
     public void ShiftTo(int x, int y)
     {
-        xTarget = x;
-        yTarget = y;
+        xIndex = x;
+        yIndex = y;
         isShifting = true;
+
+        BoardManager.instance.tiles[x, y] = gameObject;
     }
 
 	public void SwapSprite(SpriteRenderer render2) {

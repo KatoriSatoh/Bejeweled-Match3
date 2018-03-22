@@ -153,6 +153,8 @@ public class BoardManager : MonoBehaviour {
     }
 
 	public IEnumerator FindNullTiles() {
+        yield return new WaitUntil(() => !IsShifting);
+
 		for (int x = 0; x < xSize; x++) {
 			for (int y = 0; y < ySize; y++) {
 				if (tiles [x, y].GetComponent<SpriteRenderer> ().sprite == null)
@@ -165,11 +167,11 @@ public class BoardManager : MonoBehaviour {
 
         yield return new WaitUntil(() => !IsShifting);
 
-		for (int x = 0; x < xSize; x++) {
-			for (int y = 0; y < ySize; y++) {
-				tiles [x, y].GetComponent<Tile> ().ClearAllMatches ();
-			}
-		}
+		//for (int x = 0; x < xSize; x++) {
+		//	for (int y = 0; y < ySize; y++) {
+		//		tiles [x, y].GetComponent<Tile> ().ClearAllMatches ();
+		//	}
+		//}
 	}
 
 	private void ShiftTilesDown(int x, int yStart) {
