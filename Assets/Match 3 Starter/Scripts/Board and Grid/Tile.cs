@@ -27,6 +27,7 @@ using System.Collections.Generic;
 public class Tile : MonoBehaviour {
     private static Color selectedColor = new Color(.5f, .5f, .5f, 1.0f);
     private static Tile previousSelected = null;
+    private static Tile swappingTile = null;
 
     public int xIndex { get; set; }
     public int yIndex { get; set; }
@@ -34,6 +35,7 @@ public class Tile : MonoBehaviour {
     private SpriteRenderer render;
     private bool isSelected = false;
     private bool matchFound = false;
+    private bool failedSwap = false;
     public bool isShifting { get; set; }
 
 	private Vector2[] adjacentDirections = new Vector2[] { Vector2.up, Vector2.down, Vector2.left, Vector2.right };
@@ -99,10 +101,11 @@ public class Tile : MonoBehaviour {
 						TriggerSpecialTile ();
 						return;
 					}
-
-					SwapSprite (previousSelected.render);
+                    
+                    StopCoroutine(SwapSprite());
+                    StartCoroutine(SwapSprite());
 				} else {
-					previousSelected.GetComponent<Tile> ().Deselect ();
+					previousSelected.Deselect ();
 
 					if (IsSpecialTile()) {
 						TriggerSpecialTile ();
@@ -132,16 +135,38 @@ public class Tile : MonoBehaviour {
         BoardManager.instance.tiles[x, y] = gameObject;
     }
 
-	public void SwapSprite(SpriteRenderer render2) {
+	public IEnumerator SwapSprite() {
         int xTemp = previousSelected.xIndex;
         int yTemp = previousSelected.yIndex;
 
+        swappingTile = previousSelected;
         previousSelected.ShiftTo(xIndex, yIndex);
         previousSelected.Deselect();
 
         ShiftTo(xTemp, yTemp);
+ 
+        SFXManager.instance.PlaySFX(Clip.Swap);
 
-		SFXManager.instance.PlaySFX (Clip.Swap);
+        yield return new WaitUntil(() => !isShifting && !swappingTile.isShifting);
+
+        if (failedSwap && swappingTile.failedSwap)
+        {
+            xTemp = swappingTile.xIndex;
+            yTemp = swappingTile.yIndex;
+
+            swappingTile.ShiftTo(xIndex, yIndex);
+            swappingTile = null;
+
+            ShiftTo(xTemp, yTemp);
+
+            SFXManager.instance.PlaySFX(Clip.Swap);
+        }
+        else
+        {
+            swappingTile.failedSwap = false;
+            swappingTile = null;
+            failedSwap = false;
+        }
 	}
 
 	private GameObject GetAdjacent(Vector2 castDir) {
@@ -211,6 +236,10 @@ public class Tile : MonoBehaviour {
 
 			SFXManager.instance.PlaySFX (Clip.Clear);
 		}
+        else if (swappingTile != null)
+        {
+            failedSwap = true;
+        }
 	}
 
 	private void ExplodeTilesAround() {
