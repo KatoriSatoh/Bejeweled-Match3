@@ -33,12 +33,9 @@ public class BoardManager : MonoBehaviour {
 	public GameObject tile;
 	public int xSize, ySize;
 
-	public Slider frenzyBar;
-
 	public GameObject[,] tiles;
 
 	private List<GameObject> frenzyTiles = new List<GameObject> ();
-	private List<Sprite> frenzySprites = new List<Sprite> ();
 
 	private float remainingTime, frenzyTimeCurrent, frenzyTimeMax;
 	private float frenzyDisplay, frenzyCurrent, frenzyMax;
@@ -52,7 +49,7 @@ public class BoardManager : MonoBehaviour {
 
 	void Awake () {
 		remainingTime = 30.0f;
-		frenzyTimeMax = 5.0f;
+		frenzyTimeMax = 4.0f;
 		frenzyMax = 10.0f;
 		frenzyDisplay = frenzyCurrent = frenzyTimeCurrent = 0.0f;
 
@@ -77,11 +74,7 @@ public class BoardManager : MonoBehaviour {
 			remainingTime = 0;
 		}
 
-		if (IsFrenzy) {
-			frenzyCurrent -= frenzyMax / 5 * Time.deltaTime;
-			if (frenzyCurrent <= 0)
-				frenzyCurrent = 0;
-			
+		if (IsFrenzy && !IsShifting && !IsAnimating) {
 			frenzyTimeCurrent += Time.deltaTime;
 			if (frenzyTimeCurrent >= 1) {
 				frenzyTimeCurrent -= 1;
@@ -90,9 +83,10 @@ public class BoardManager : MonoBehaviour {
 				SpawnFrenzyTiles ();
 			}
 
-			frenzyTimeMax -= Time.deltaTime;
-			if (frenzyTimeMax <= 0) {
-				frenzyTimeMax = 5.0f;
+			frenzyCurrent -= frenzyMax / frenzyTimeMax * Time.deltaTime;
+			if (frenzyCurrent <= 0) {
+				frenzyCurrent = 0;
+				frenzyTimeMax = 4.0f;
 				IsFrenzy = false;
 
 				ReturnFrenzyTilesToNormal ();
@@ -103,6 +97,15 @@ public class BoardManager : MonoBehaviour {
 
 		UpdateFrenzyBar ();
 		GUIManager.instance.Time = (int)Mathf.Ceil (remainingTime);
+	}
+
+	public IEnumerator ResetFrenzySpawn() {
+		frenzyTimeCurrent = 0;
+
+		yield return new WaitUntil (() => !IsShifting && !IsAnimating);
+
+		ReturnFrenzyTilesToNormal ();
+		SpawnFrenzyTiles ();
 	}
 
     private bool CheckAnimating() {
@@ -152,7 +155,7 @@ public class BoardManager : MonoBehaviour {
         return new Vector3(transform.position.x + tileSize.x * x, transform.position.y + tileSize.y * y, 0);
     }
 
-	public IEnumerator FindNullTiles() {
+	public IEnumerator FindNullTiles(bool flag = false) {
         yield return new WaitUntil(() => !IsShifting);
 
 		for (int x = 0; x < xSize; x++) {
@@ -167,11 +170,10 @@ public class BoardManager : MonoBehaviour {
 
         yield return new WaitUntil(() => !IsShifting);
 
-		//for (int x = 0; x < xSize; x++) {
-		//	for (int y = 0; y < ySize; y++) {
-		//		tiles [x, y].GetComponent<Tile> ().ClearAllMatches ();
-		//	}
-		//}
+		if (flag) {
+			StopCoroutine (ResetFrenzySpawn ());
+			StartCoroutine (ResetFrenzySpawn ());
+		}
 	}
 
 	private void ShiftTilesDown(int x, int yStart) {
@@ -242,12 +244,12 @@ public class BoardManager : MonoBehaviour {
 				frenzyDisplay = frenzyCurrent;
 		}
 
-		frenzyBar.value = frenzyDisplay / frenzyMax;
+		GUIManager.instance.Frenzy = frenzyDisplay / frenzyMax;
 	}
 
 	private void StartFrenzyMode() {
 		frenzyCurrent = frenzyMax;
-		frenzyTimeMax = 5.0f;
+		frenzyTimeMax = 4.0f;
 		frenzyTimeCurrent = 0.0f;
 
 		IsFrenzy = true;
@@ -256,7 +258,6 @@ public class BoardManager : MonoBehaviour {
 
 	private void SpawnFrenzyTiles() {
 		frenzyTiles.Clear ();
-		frenzySprites.Clear ();
 
 		while (frenzyTiles.Count < frenzyTileNumber) {
 			int x = Random.Range (0, xSize - 1);
@@ -264,19 +265,17 @@ public class BoardManager : MonoBehaviour {
 
 			if (!frenzyTiles.Contains (tiles [x, y])) {
 				frenzyTiles.Add (tiles [x, y]);
-				frenzySprites.Add (tiles [x, y].GetComponent<SpriteRenderer> ().sprite);
 			}
 		}
 
 		foreach (GameObject tile in frenzyTiles) {
-			tile.GetComponent<SpriteRenderer> ().sprite = specialSprite;
+			tile.GetComponent<Tile> ().SetFrenzy ();
 		}
 	}
 
 	private void ReturnFrenzyTilesToNormal() {
 		for (int i = 0; i < frenzyTiles.Count; i++) {
-			if (frenzyTiles [i].GetComponent<SpriteRenderer> ().sprite == specialSprite)
-				frenzyTiles [i].GetComponent<SpriteRenderer> ().sprite = frenzySprites [i];
+			frenzyTiles [i].GetComponent<Tile> ().SetNormal ();
 		}
 	}
 }

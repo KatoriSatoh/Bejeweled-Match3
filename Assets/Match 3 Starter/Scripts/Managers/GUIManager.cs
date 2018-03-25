@@ -23,6 +23,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using System.Collections.Generic;
 
 public class GUIManager : MonoBehaviour {
 	public static GUIManager instance;
@@ -34,8 +35,10 @@ public class GUIManager : MonoBehaviour {
 	public Text scoreTxt;
 	public Text timeTxt;
 
-	private int score;
-	private int time;
+	public Slider frenzyBar;
+
+	private int score, time;
+	private float frenzy;
 
 	public int Score {
 		get {
@@ -64,11 +67,25 @@ public class GUIManager : MonoBehaviour {
 		}
 	}
 
+	public float Frenzy {
+		get { 
+			return frenzy;
+		}
+
+		set { 
+			frenzy = value;
+		}
+	}
+
 	void Awake() {
 		time = 30;
 		timeTxt.text = time.ToString ();
 
 		instance = GetComponent<GUIManager>();
+	}
+
+	void Update() {
+		frenzyBar.value = frenzy;
 	}
 
 	// Show the game over panel

@@ -33,9 +33,12 @@ public class Tile : MonoBehaviour {
     public int yIndex { get; set; }
 
     private SpriteRenderer render;
+	private Sprite previousSprite;
+
     private bool isSelected = false;
     private bool matchFound = false;
     private bool failedSwap = false;
+
     public bool isShifting { get; set; }
 
 	private Vector2[] adjacentDirections = new Vector2[] { Vector2.up, Vector2.down, Vector2.left, Vector2.right };
@@ -50,7 +53,7 @@ public class Tile : MonoBehaviour {
     {
         if (isShifting)
         {
-            float step = 5 * Time.deltaTime;
+            float step = 10 * Time.deltaTime;
             Vector3 target = BoardManager.instance.CalculatePosition(xIndex, yIndex);
 
             transform.position = Vector3.MoveTowards(transform.position, target, step);
@@ -89,7 +92,7 @@ public class Tile : MonoBehaviour {
 		} else {
 			if (previousSelected == null) {
 				if (IsSpecialTile()) {
-					TriggerSpecialTile ();
+					TriggerSpecialTile();
 					return;
 				}
 
@@ -98,7 +101,7 @@ public class Tile : MonoBehaviour {
 				if (GetAllAdjacentTiles ().Contains (previousSelected.gameObject)) {
 					if (IsSpecialTile ()) {
 						previousSelected.Deselect ();
-						TriggerSpecialTile ();
+						TriggerSpecialTile();
 						return;
 					}
                     
@@ -108,7 +111,7 @@ public class Tile : MonoBehaviour {
 					previousSelected.Deselect ();
 
 					if (IsSpecialTile()) {
-						TriggerSpecialTile ();
+						TriggerSpecialTile();
 						return;
 					}
 
@@ -291,17 +294,36 @@ public class Tile : MonoBehaviour {
 		if (render.sprite == null)
 			return;
 
+		bool isSpecialTriggered = false;
+
 		if (render.sprite == BoardManager.instance.explodeSprite) {
 			render.sprite = null;
 			ExplodeTilesAround ();
 		} else {
 			render.sprite = null;
 			ExplodeCrossLine ();
+
+			isSpecialTriggered = true;
 		}
 
-		StopCoroutine (BoardManager.instance.FindNullTiles ());
-		StartCoroutine (BoardManager.instance.FindNullTiles ());
+		//StopCoroutine (BoardManager.instance.FindNullTiles (isSpecialTriggered));
+		StartCoroutine (BoardManager.instance.FindNullTiles (isSpecialTriggered));
+
+//		if (isSpecialTriggered) {
+//			StopCoroutine (BoardManager.instance.ResetFrenzySpawn ());
+//			StartCoroutine (BoardManager.instance.ResetFrenzySpawn ());
+//		}
 
 		SFXManager.instance.PlaySFX (Clip.Clear);
+	}
+
+	public void SetFrenzy() {
+		previousSprite = render.sprite;
+		render.sprite = BoardManager.instance.specialSprite;
+	}
+
+	public void SetNormal() {
+		if (render.sprite == BoardManager.instance.specialSprite)
+			render.sprite = previousSprite;
 	}
 }
