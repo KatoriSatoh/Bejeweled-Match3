@@ -36,8 +36,11 @@ public class BoardManager : MonoBehaviour {
 	public GameObject[,] tiles;
 
 	private List<GameObject> frenzyTiles = new List<GameObject> ();
+    private GameObject[] hintTiles;
 
-	private float remainingTime, frenzyTimeCurrent, frenzyTimeMax;
+    private Vector2[] adjacentDirections = new Vector2[] { Vector2.up, Vector2.down, Vector2.left, Vector2.right };
+
+    private float remainingTime, frenzyTimeCurrent, frenzyTimeMax, hintTimeCurrent, hintTime;
 	private float frenzyDisplay, frenzyCurrent, frenzyMax;
 	private int frenzyTileNumber = 4;
 
@@ -50,8 +53,9 @@ public class BoardManager : MonoBehaviour {
 	void Awake () {
 		remainingTime = 30.0f;
 		frenzyTimeMax = 4.0f;
-		frenzyMax = 10.0f;
-		frenzyDisplay = frenzyCurrent = frenzyTimeCurrent = 0.0f;
+        frenzyMax = 10.0f;
+		frenzyDisplay = frenzyCurrent = frenzyTimeCurrent = hintTimeCurrent = 0.0f;
+        hintTime = 3.0f;
 
         tileSize = tile.GetComponent<SpriteRenderer>().bounds.size;
 
@@ -74,6 +78,34 @@ public class BoardManager : MonoBehaviour {
 			remainingTime = 0;
 		}
 
+        if (hintTimeCurrent == hintTime && !IsFrenzy)
+        {
+            if ((Time.timeSinceLevelLoad * 1000) % 500 < 250)
+            {
+                foreach (GameObject hintTile in hintTiles)
+                {
+                    hintTile.GetComponent<Tile>().SetHint();
+                }
+            }
+            else
+            {
+                foreach (GameObject hintTile in hintTiles)
+                {
+                    hintTile.GetComponent<Tile>().RemoveHint();
+                }
+            }
+        }
+
+        if (hintTimeCurrent < hintTime && !IsFrenzy)
+        {
+            hintTimeCurrent += Time.deltaTime;
+            if (hintTimeCurrent >= hintTime)
+            {
+                hintTimeCurrent = hintTime;
+                hintTiles = CheckHintAll();
+            }
+        }
+
 		if (IsFrenzy && !IsShifting && !IsAnimating) {
 			frenzyTimeCurrent += Time.deltaTime;
 			if (frenzyTimeCurrent >= 1) {
@@ -94,7 +126,7 @@ public class BoardManager : MonoBehaviour {
 		}
 
         IsAnimating = CheckAnimating();
-
+        
 		UpdateFrenzyBar ();
 		GUIManager.instance.Time = (int)Mathf.Ceil (remainingTime);
 	}
@@ -251,8 +283,9 @@ public class BoardManager : MonoBehaviour {
 		frenzyCurrent = frenzyMax;
 		frenzyTimeMax = 4.0f;
 		frenzyTimeCurrent = 0.0f;
+        hintTimeCurrent = 0;
 
-		IsFrenzy = true;
+        IsFrenzy = true;
 		SpawnFrenzyTiles ();
 	}
 
@@ -278,4 +311,134 @@ public class BoardManager : MonoBehaviour {
 			frenzyTiles [i].GetComponent<Tile> ().SetNormal ();
 		}
 	}
+
+    private GameObject[] CheckHintOnDirection(GameObject myTile, Vector2 dir)
+    {
+        int xIndex = myTile.GetComponent<Tile>().xIndex;
+        int yIndex = myTile.GetComponent<Tile>().yIndex;
+        Sprite tileSprite = myTile.GetComponent<SpriteRenderer>().sprite;
+
+        if (xIndex + (int)dir.x < 0 || yIndex + (int)dir.y < 0 || xIndex + (int)dir.x > xSize - 1 || yIndex + (int)dir.y > ySize - 1) return null;
+
+        GameObject go1, go2;
+        if (dir == Vector2.up || dir == Vector2.down)
+        {
+            // Straight check
+            if (yIndex + (int)dir.y * 3 >= 0 && yIndex + (int)dir.y * 3 < ySize)
+            {
+                go1 = tiles[xIndex, yIndex + (int)dir.y * 2];
+                go2 = tiles[xIndex, yIndex + (int)dir.y * 3];
+
+                if (tileSprite == go1.GetComponent<SpriteRenderer>().sprite && tileSprite == go2.GetComponent<SpriteRenderer>().sprite)
+                {
+                    return new GameObject[] { myTile, go1, go2 };
+                }
+            }
+            // Left side check
+            if (xIndex - 2 >= 0)
+            {
+                go1 = tiles[xIndex - 1, yIndex + (int)dir.y];
+                go2 = tiles[xIndex - 2, yIndex + (int)dir.y];
+
+                if (tileSprite == go1.GetComponent<SpriteRenderer>().sprite && tileSprite == go2.GetComponent<SpriteRenderer>().sprite)
+                {
+                    return new GameObject[] { myTile, go1, go2 };
+                }
+            }
+            // Right side check
+            if (xIndex + 2 < xSize)
+            {
+                go1 = tiles[xIndex + 1, yIndex + (int)dir.y];
+                go2 = tiles[xIndex + 2, yIndex + (int)dir.y];
+
+                if (tileSprite == go1.GetComponent<SpriteRenderer>().sprite && tileSprite == go2.GetComponent<SpriteRenderer>().sprite)
+                {
+                    return new GameObject[] { myTile, go1, go2 };
+                }
+            }
+            // Both side check
+            if (xIndex - 1 >= 0 && xIndex + 1 < xSize)
+            {
+                go1 = tiles[xIndex + 1, yIndex + (int)dir.y];
+                go2 = tiles[xIndex - 1, yIndex + (int)dir.y];
+
+                if (tileSprite == go1.GetComponent<SpriteRenderer>().sprite && tileSprite == go2.GetComponent<SpriteRenderer>().sprite)
+                {
+                    return new GameObject[] { myTile, go1, go2 };
+                }
+            }
+        }
+        else
+        {
+            // Straight check
+            if (xIndex + (int)dir.x * 3 >= 0 && xIndex + (int)dir.x * 3 < xSize)
+            {
+                go1 = tiles[xIndex + (int)dir.x * 2, yIndex];
+                go2 = tiles[xIndex + (int)dir.x * 3, yIndex];
+
+                if (tileSprite == go1.GetComponent<SpriteRenderer>().sprite && tileSprite == go2.GetComponent<SpriteRenderer>().sprite)
+                {
+                    return new GameObject[] { myTile, go1, go2 };
+                }
+            }
+            // Bottom side check
+            if (yIndex - 2 >= 0)
+            {
+                go1 = tiles[xIndex + (int)dir.x, yIndex - 1];
+                go2 = tiles[xIndex + (int)dir.x, yIndex - 2];
+
+                if (tileSprite == go1.GetComponent<SpriteRenderer>().sprite && tileSprite == go2.GetComponent<SpriteRenderer>().sprite)
+                {
+                    return new GameObject[] { myTile, go1, go2 };
+                }
+            }
+            // Top side check
+            if (yIndex + 2 < ySize)
+            {
+                go1 = tiles[xIndex + (int)dir.x, yIndex + 1];
+                go2 = tiles[xIndex + (int)dir.x, yIndex + 2];
+
+                if (tileSprite == go1.GetComponent<SpriteRenderer>().sprite && tileSprite == go2.GetComponent<SpriteRenderer>().sprite)
+                {
+                    return new GameObject[] { myTile, go1, go2 };
+                }
+            }
+            // Both side check
+            if (yIndex - 1 >= 0 && yIndex + 1 < ySize)
+            {
+                go1 = tiles[xIndex + (int)dir.x, yIndex + 1];
+                go2 = tiles[xIndex + (int)dir.y, yIndex - 1];
+
+                if (tileSprite == go1.GetComponent<SpriteRenderer>().sprite && tileSprite == go2.GetComponent<SpriteRenderer>().sprite)
+                {
+                    return new GameObject[] { myTile, go1, go2 };
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private GameObject[] CheckHintAll()
+    {
+        foreach (GameObject tile in tiles)
+        {
+            foreach (Vector2 dir in adjacentDirections)
+            {
+                GameObject[] result = CheckHintOnDirection(tile, dir);
+                if (result != null) return result;
+            }
+        }
+
+        return null;
+    }
+
+    public void ResetHint()
+    {
+        hintTimeCurrent = 0;
+        foreach (GameObject hint in hintTiles)
+        {
+            hint.GetComponent<Tile>().RemoveHint();
+        }
+    }
 }

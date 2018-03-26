@@ -26,6 +26,7 @@ using System.Collections.Generic;
 
 public class Tile : MonoBehaviour {
     private static Color selectedColor = new Color(.5f, .5f, .5f, 1.0f);
+    private static Color hintColor = new Color(1.0f, 0.92f, 0.016f, 1.0f);
     private static Tile previousSelected = null;
     private static Tile swappingTile = null;
 
@@ -77,6 +78,20 @@ public class Tile : MonoBehaviour {
 		render.color = Color.white;
 		previousSelected = null;
 	}
+
+    public void SetHint()
+    {
+        if (isSelected) return;
+
+        render.color = hintColor;
+    }
+
+    public void RemoveHint()
+    {
+        if (isSelected) return;
+
+        render.color = Color.white;
+    }
 
 	private bool IsSpecialTile() {
 		return render.sprite == BoardManager.instance.explodeSprite || render.sprite == BoardManager.instance.specialSprite;
@@ -139,6 +154,8 @@ public class Tile : MonoBehaviour {
     }
 
 	public IEnumerator SwapSprite() {
+        BoardManager.instance.ResetHint();
+
         int xTemp = previousSelected.xIndex;
         int yTemp = previousSelected.yIndex;
 
@@ -294,7 +311,9 @@ public class Tile : MonoBehaviour {
 		if (render.sprite == null)
 			return;
 
-		bool isSpecialTriggered = false;
+        BoardManager.instance.ResetHint();
+
+        bool isSpecialTriggered = false;
 
 		if (render.sprite == BoardManager.instance.explodeSprite) {
 			render.sprite = null;
