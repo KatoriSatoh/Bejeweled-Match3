@@ -25,17 +25,45 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class Tile : MonoBehaviour {
-	private static Color selectedColor = new Color(.5f, .5f, .5f, 1.0f);
-	private static Tile previousSelected = null;
+    private static Color selectedColor = new Color(.5f, .5f, .5f, 1.0f);
+    private static Color hintColor = new Color(1.0f, 0.92f, 0.016f, 1.0f);
+    private static Tile previousSelected = null;
+    private static Tile swappingTile = null;
 
-	private SpriteRenderer render;
-	private bool isSelected = false;
-	private bool matchFound = false;
+    public int xIndex { get; set; }
+    public int yIndex { get; set; }
+
+    private SpriteRenderer render;
+	private Sprite previousSprite;
+
+    private bool isSelected = false;
+    private bool matchFound = false;
+    private bool failedSwap = false;
+
+    public bool isShifting { get; set; }
 
 	private Vector2[] adjacentDirections = new Vector2[] { Vector2.up, Vector2.down, Vector2.left, Vector2.right };
 
 	void Awake() {
 		render = GetComponent<SpriteRenderer>();
+
+        isShifting = false;
+    }
+
+    void Update()
+    {
+        if (isShifting)
+        {
+            float step = 10 * Time.deltaTime;
+            Vector3 target = BoardManager.instance.CalculatePosition(xIndex, yIndex);
+
+            transform.position = Vector3.MoveTowards(transform.position, target, step);
+            if (transform.position == target)
+            {
+                isShifting = false;
+                ClearAllMatches();
+            }
+        }
     }
 
 	private void Select() {
@@ -51,12 +79,26 @@ public class Tile : MonoBehaviour {
 		previousSelected = null;
 	}
 
+    public void SetHint()
+    {
+        if (isSelected) return;
+
+        render.color = hintColor;
+    }
+
+    public void RemoveHint()
+    {
+        if (isSelected) return;
+
+        render.color = Color.white;
+    }
+
 	private bool IsSpecialTile() {
-		return BoardManager.instance.specialChars.Contains (render.sprite);
+		return render.sprite == BoardManager.instance.explodeSprite || render.sprite == BoardManager.instance.specialSprite;
 	}
 
 	void OnMouseDown() {
-		if (render.sprite == null || BoardManager.instance.IsShifting) {
+		if (render.sprite == null || BoardManager.instance.IsShifting || BoardManager.instance.IsAnimating) {
 			return;
 		}
 
@@ -65,7 +107,7 @@ public class Tile : MonoBehaviour {
 		} else {
 			if (previousSelected == null) {
 				if (IsSpecialTile()) {
-					TriggerSpecialTile ();
+					TriggerSpecialTile();
 					return;
 				}
 
@@ -74,19 +116,17 @@ public class Tile : MonoBehaviour {
 				if (GetAllAdjacentTiles ().Contains (previousSelected.gameObject)) {
 					if (IsSpecialTile ()) {
 						previousSelected.Deselect ();
-						TriggerSpecialTile ();
+						TriggerSpecialTile();
 						return;
 					}
-
-					SwapSprite (previousSelected.render);
-					previousSelected.ClearAllMatches();
-					previousSelected.Deselect ();
-					ClearAllMatches ();
+                    
+                    StopCoroutine(SwapSprite());
+                    StartCoroutine(SwapSprite());
 				} else {
-					previousSelected.GetComponent<Tile> ().Deselect ();
+					previousSelected.Deselect ();
 
 					if (IsSpecialTile()) {
-						TriggerSpecialTile ();
+						TriggerSpecialTile();
 						return;
 					}
 
@@ -96,15 +136,57 @@ public class Tile : MonoBehaviour {
 		}
 	}
 
-	public void SwapSprite(SpriteRenderer render2) {
-		if (render.sprite == render2.sprite) {
-			return;
-		}
+    public void MoveTo(int x, int y)
+    {
+        xIndex = x;
+        yIndex = y;
 
-		Sprite tmpSprite = render2.sprite;
-		render2.sprite = render.sprite;
-		render.sprite = tmpSprite;
-		SFXManager.instance.PlaySFX (Clip.Swap);
+        transform.position = BoardManager.instance.CalculatePosition(x, y);
+    }
+
+    public void ShiftTo(int x, int y)
+    {
+        xIndex = x;
+        yIndex = y;
+        isShifting = true;
+
+        BoardManager.instance.tiles[x, y] = gameObject;
+    }
+
+	public IEnumerator SwapSprite() {
+        BoardManager.instance.ResetHint();
+
+        int xTemp = previousSelected.xIndex;
+        int yTemp = previousSelected.yIndex;
+
+        swappingTile = previousSelected;
+        previousSelected.ShiftTo(xIndex, yIndex);
+        previousSelected.Deselect();
+
+        ShiftTo(xTemp, yTemp);
+ 
+        SFXManager.instance.PlaySFX(Clip.Swap);
+
+        yield return new WaitUntil(() => !isShifting && !swappingTile.isShifting);
+
+        if (failedSwap && swappingTile.failedSwap)
+        {
+            xTemp = swappingTile.xIndex;
+            yTemp = swappingTile.yIndex;
+
+            swappingTile.ShiftTo(xIndex, yIndex);
+            swappingTile = null;
+
+            ShiftTo(xTemp, yTemp);
+
+            SFXManager.instance.PlaySFX(Clip.Swap);
+        }
+        else
+        {
+            swappingTile.failedSwap = false;
+            swappingTile = null;
+            failedSwap = false;
+        }
 	}
 
 	private GameObject GetAdjacent(Vector2 castDir) {
@@ -164,7 +246,7 @@ public class Tile : MonoBehaviour {
 			if (h + v < 3) {
 				render.sprite = null;
 			} else {
-				render.sprite = BoardManager.instance.specialChars [0];
+				render.sprite = BoardManager.instance.explodeSprite;
 				GUIManager.instance.Score += 10;
 			}
 			matchFound = false;
@@ -174,6 +256,10 @@ public class Tile : MonoBehaviour {
 
 			SFXManager.instance.PlaySFX (Clip.Clear);
 		}
+        else if (swappingTile != null)
+        {
+            failedSwap = true;
+        }
 	}
 
 	private void ExplodeTilesAround() {
@@ -225,17 +311,38 @@ public class Tile : MonoBehaviour {
 		if (render.sprite == null)
 			return;
 
-		if (render.sprite == BoardManager.instance.specialChars [0]) {
+        BoardManager.instance.ResetHint();
+
+        bool isSpecialTriggered = false;
+
+		if (render.sprite == BoardManager.instance.explodeSprite) {
 			render.sprite = null;
 			ExplodeTilesAround ();
 		} else {
 			render.sprite = null;
 			ExplodeCrossLine ();
+
+			isSpecialTriggered = true;
 		}
 
-		StopCoroutine (BoardManager.instance.FindNullTiles ());
-		StartCoroutine (BoardManager.instance.FindNullTiles ());
+		//StopCoroutine (BoardManager.instance.FindNullTiles (isSpecialTriggered));
+		StartCoroutine (BoardManager.instance.FindNullTiles (isSpecialTriggered));
+
+//		if (isSpecialTriggered) {
+//			StopCoroutine (BoardManager.instance.ResetFrenzySpawn ());
+//			StartCoroutine (BoardManager.instance.ResetFrenzySpawn ());
+//		}
 
 		SFXManager.instance.PlaySFX (Clip.Clear);
+	}
+
+	public void SetFrenzy() {
+		previousSprite = render.sprite;
+		render.sprite = BoardManager.instance.specialSprite;
+	}
+
+	public void SetNormal() {
+		if (render.sprite == BoardManager.instance.specialSprite)
+			render.sprite = previousSprite;
 	}
 }

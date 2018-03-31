@@ -28,38 +28,48 @@ using UnityEngine.UI;
 public class BoardManager : MonoBehaviour {
 	public static BoardManager instance;
 	public List<Sprite> characters = new List<Sprite> ();
-	public List<Sprite> specialChars = new List<Sprite> ();
+	public Sprite explodeSprite = new Sprite();
+	public Sprite specialSprite = new Sprite();
 	public GameObject tile;
 	public int xSize, ySize;
 
-	public Slider frenzyBar;
-
-	private GameObject[,] tiles;
+	public GameObject[,] tiles;
 
 	private List<GameObject> frenzyTiles = new List<GameObject> ();
-	private List<Sprite> frenzySprites = new List<Sprite> ();
+    private GameObject[] hintTiles;
 
-	private float remainingTime, frenzyTimeCurrent, frenzyTimeMax;
+    private Vector2[] adjacentDirections = new Vector2[] { Vector2.up, Vector2.down, Vector2.left, Vector2.right };
+
+    private float remainingTime, frenzyTimeCurrent, frenzyTimeMax, hintTimeCurrent, hintTime;
 	private float frenzyDisplay, frenzyCurrent, frenzyMax;
 	private int frenzyTileNumber = 4;
 
+    private Vector2 tileSize;
+
+    public bool IsAnimating { get; set; }
 	public bool IsShifting { get; set; }
 	public bool IsFrenzy { get; set; }
 
 	void Awake () {
 		remainingTime = 30.0f;
-		frenzyTimeMax = 5.0f;
-		frenzyMax = 10.0f;
-		frenzyDisplay = frenzyCurrent = frenzyTimeCurrent = 0.0f;
+		frenzyTimeMax = 4.0f;
+        frenzyMax = 10.0f;
+		frenzyDisplay = frenzyCurrent = frenzyTimeCurrent = hintTimeCurrent = 0.0f;
+        hintTime = 3.0f;
+
+        tileSize = tile.GetComponent<SpriteRenderer>().bounds.size;
 
 		IsFrenzy = false;
 	}
 
 	void Start () {
 		instance = GetComponent<BoardManager>();
+        
+		float boardWidth = tileSize.x * (xSize - 1);
+		float boardHeight = tileSize.y * (ySize - 1);
+		gameObject.transform.position = new Vector3 (-boardWidth / 2, -boardHeight / 2, 0);
 
-		Vector2 offset = tile.GetComponent<SpriteRenderer>().bounds.size;
-        CreateBoard(offset.x, offset.y);
+        CreateBoard(tileSize.x, tileSize.y);
     }
 
 	void Update () {
@@ -68,11 +78,35 @@ public class BoardManager : MonoBehaviour {
 			remainingTime = 0;
 		}
 
-		if (IsFrenzy) {
-			frenzyCurrent -= frenzyMax / 5 * Time.deltaTime;
-			if (frenzyCurrent <= 0)
-				frenzyCurrent = 0;
-			
+        if (hintTimeCurrent == hintTime && !IsFrenzy)
+        {
+            if ((Time.timeSinceLevelLoad * 1000) % 500 < 250)
+            {
+                foreach (GameObject hintTile in hintTiles)
+                {
+                    hintTile.GetComponent<Tile>().SetHint();
+                }
+            }
+            else
+            {
+                foreach (GameObject hintTile in hintTiles)
+                {
+                    hintTile.GetComponent<Tile>().RemoveHint();
+                }
+            }
+        }
+
+        if (hintTimeCurrent < hintTime && !IsFrenzy)
+        {
+            hintTimeCurrent += Time.deltaTime;
+            if (hintTimeCurrent >= hintTime)
+            {
+                hintTimeCurrent = hintTime;
+                hintTiles = CheckHintAll();
+            }
+        }
+
+		if (IsFrenzy && !IsShifting && !IsAnimating) {
 			frenzyTimeCurrent += Time.deltaTime;
 			if (frenzyTimeCurrent >= 1) {
 				frenzyTimeCurrent -= 1;
@@ -81,18 +115,40 @@ public class BoardManager : MonoBehaviour {
 				SpawnFrenzyTiles ();
 			}
 
-			frenzyTimeMax -= Time.deltaTime;
-			if (frenzyTimeMax <= 0) {
-				frenzyTimeMax = 5.0f;
+			frenzyCurrent -= frenzyMax / frenzyTimeMax * Time.deltaTime;
+			if (frenzyCurrent <= 0) {
+				frenzyCurrent = 0;
+				frenzyTimeMax = 4.0f;
 				IsFrenzy = false;
 
 				ReturnFrenzyTilesToNormal ();
 			}
 		}
 
+        IsAnimating = CheckAnimating();
+        
 		UpdateFrenzyBar ();
 		GUIManager.instance.Time = (int)Mathf.Ceil (remainingTime);
 	}
+
+	public IEnumerator ResetFrenzySpawn() {
+		frenzyTimeCurrent = 0;
+
+		yield return new WaitUntil (() => !IsShifting && !IsAnimating);
+
+		ReturnFrenzyTilesToNormal ();
+		SpawnFrenzyTiles ();
+	}
+
+    private bool CheckAnimating() {
+        foreach (GameObject tile in tiles) {
+            if (tile.GetComponent<Tile>().isShifting)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 
 	private void CreateBoard (float xOffset, float yOffset) {
 		tiles = new GameObject[xSize, ySize];
@@ -106,6 +162,8 @@ public class BoardManager : MonoBehaviour {
 		for (int x = 0; x < xSize; x++) {
 			for (int y = 0; y < ySize; y++) {
 				GameObject newTile = Instantiate(tile, new Vector3(startX + (xOffset * x), startY + (yOffset * y), 0), tile.transform.rotation);
+                newTile.GetComponent<Tile>().xIndex = x;
+                newTile.GetComponent<Tile>().yIndex = y;
 				tiles[x, y] = newTile;
 
 				newTile.transform.parent = transform;
@@ -124,58 +182,67 @@ public class BoardManager : MonoBehaviour {
         }
     }
 
-	public IEnumerator FindNullTiles() {
+    public Vector3 CalculatePosition(int x, int y)
+    {
+        return new Vector3(transform.position.x + tileSize.x * x, transform.position.y + tileSize.y * y, 0);
+    }
+
+	public IEnumerator FindNullTiles(bool flag = false) {
+        yield return new WaitUntil(() => !IsShifting);
+
 		for (int x = 0; x < xSize; x++) {
 			for (int y = 0; y < ySize; y++) {
-				if (tiles [x, y].GetComponent<SpriteRenderer> ().sprite == null) {
-					yield return StartCoroutine (ShiftTilesDown (x, y));
-					//break;
+				if (tiles [x, y].GetComponent<SpriteRenderer> ().sprite == null)
+                {
+                    ShiftTilesDown(x, y);
+                    break;
 				}
 			}
 		}
 
-		for (int x = 0; x < xSize; x++) {
-			for (int y = 0; y < ySize; y++) {
-				tiles [x, y].GetComponent<Tile> ().ClearAllMatches ();
-			}
+        yield return new WaitUntil(() => !IsShifting);
+
+		if (flag) {
+			StopCoroutine (ResetFrenzySpawn ());
+			StartCoroutine (ResetFrenzySpawn ());
 		}
 	}
 
-	private IEnumerator ShiftTilesDown(int x, int yStart, float shiftDelay = .03f) {
+	private void ShiftTilesDown(int x, int yStart) {
 		IsShifting = true;
-		List<SpriteRenderer> renders = new List<SpriteRenderer> ();
-		int nullCount = 0;
+
+        int shiftIndex = 0;
+        List<GameObject> nullTiles = new List<GameObject>();
 
 		for (int y = yStart; y < ySize; y++) {
-			SpriteRenderer render = tiles [x, y].GetComponent<SpriteRenderer> ();
-			renders.Add (render);
-
-			if (render.sprite == null) {
-				nullCount++;
-			} else {
-				break;
-			}
+			if (tiles[x, y].GetComponent<SpriteRenderer>().sprite == null)
+            {
+                nullTiles.Add(tiles[x, y]);
+            }
+            else
+            {
+                tiles[x, y].GetComponent<Tile>().ShiftTo(x, yStart + shiftIndex);
+                shiftIndex++;
+            }
 		}
 
-		for (int i = 0; i < nullCount; i++) {
-			GUIManager.instance.Score += 10;
+        shiftIndex = 0;
+        foreach (GameObject tile in nullTiles) {
+            tile.GetComponent<Tile>().MoveTo(x, ySize + shiftIndex);
+            tile.GetComponent<SpriteRenderer>().sprite = GetNewSprite(x, ySize + shiftIndex - nullTiles.Count);
+            tile.GetComponent<Tile>().ShiftTo(x, ySize + shiftIndex - nullTiles.Count);
+            shiftIndex++;
+        }
 
-			if (!IsFrenzy) {
-				frenzyCurrent += 1.0f;
-				if (frenzyCurrent >= frenzyMax) {
-					StartFrenzyMode ();
-				}
-			}
-
-			yield return new WaitForSeconds (shiftDelay);
-			if (renders.Count == 1) {
-				renders [0].sprite = GetNewSprite (x, ySize - 1);
-			}
-			for (int k = 0; k < renders.Count - 1; k++) {
-				renders [k].sprite = renders [k + 1].sprite;
-				renders [k + 1].sprite = GetNewSprite(x, ySize - 1);
-			}
-		}
+        GUIManager.instance.Score += nullTiles.Count * 10;
+        if (!IsFrenzy)
+        {
+            frenzyCurrent += nullTiles.Count * 1.0f;
+            if (frenzyCurrent >= frenzyMax)
+            {
+                StartFrenzyMode();
+            }
+        }
 
 		IsShifting = false;
 	}
@@ -209,21 +276,21 @@ public class BoardManager : MonoBehaviour {
 				frenzyDisplay = frenzyCurrent;
 		}
 
-		frenzyBar.value = frenzyDisplay / frenzyMax;
+		GUIManager.instance.Frenzy = frenzyDisplay / frenzyMax;
 	}
 
 	private void StartFrenzyMode() {
 		frenzyCurrent = frenzyMax;
-		frenzyTimeMax = 5.0f;
+		frenzyTimeMax = 4.0f;
 		frenzyTimeCurrent = 0.0f;
+        hintTimeCurrent = 0;
 
-		IsFrenzy = true;
+        IsFrenzy = true;
 		SpawnFrenzyTiles ();
 	}
 
 	private void SpawnFrenzyTiles() {
 		frenzyTiles.Clear ();
-		frenzySprites.Clear ();
 
 		while (frenzyTiles.Count < frenzyTileNumber) {
 			int x = Random.Range (0, xSize - 1);
@@ -231,19 +298,147 @@ public class BoardManager : MonoBehaviour {
 
 			if (!frenzyTiles.Contains (tiles [x, y])) {
 				frenzyTiles.Add (tiles [x, y]);
-				frenzySprites.Add (tiles [x, y].GetComponent<SpriteRenderer> ().sprite);
 			}
 		}
 
 		foreach (GameObject tile in frenzyTiles) {
-			tile.GetComponent<SpriteRenderer> ().sprite = specialChars [1];
+			tile.GetComponent<Tile> ().SetFrenzy ();
 		}
 	}
 
 	private void ReturnFrenzyTilesToNormal() {
 		for (int i = 0; i < frenzyTiles.Count; i++) {
-			if (frenzyTiles [i].GetComponent<SpriteRenderer> ().sprite == specialChars[1])
-				frenzyTiles [i].GetComponent<SpriteRenderer> ().sprite = frenzySprites [i];
+			frenzyTiles [i].GetComponent<Tile> ().SetNormal ();
 		}
 	}
+
+    private GameObject[] CheckHintOnDirection(GameObject myTile, Vector2 dir)
+    {
+        int xIndex = myTile.GetComponent<Tile>().xIndex;
+        int yIndex = myTile.GetComponent<Tile>().yIndex;
+        Sprite tileSprite = myTile.GetComponent<SpriteRenderer>().sprite;
+
+        if (xIndex + (int)dir.x < 0 || yIndex + (int)dir.y < 0 || xIndex + (int)dir.x > xSize - 1 || yIndex + (int)dir.y > ySize - 1) return null;
+
+        GameObject go1, go2;
+        if (dir == Vector2.up || dir == Vector2.down)
+        {
+            // Straight check
+            if (yIndex + (int)dir.y * 3 >= 0 && yIndex + (int)dir.y * 3 < ySize)
+            {
+                go1 = tiles[xIndex, yIndex + (int)dir.y * 2];
+                go2 = tiles[xIndex, yIndex + (int)dir.y * 3];
+
+                if (tileSprite == go1.GetComponent<SpriteRenderer>().sprite && tileSprite == go2.GetComponent<SpriteRenderer>().sprite)
+                {
+                    return new GameObject[] { myTile, go1, go2 };
+                }
+            }
+            // Left side check
+            if (xIndex - 2 >= 0)
+            {
+                go1 = tiles[xIndex - 1, yIndex + (int)dir.y];
+                go2 = tiles[xIndex - 2, yIndex + (int)dir.y];
+
+                if (tileSprite == go1.GetComponent<SpriteRenderer>().sprite && tileSprite == go2.GetComponent<SpriteRenderer>().sprite)
+                {
+                    return new GameObject[] { myTile, go1, go2 };
+                }
+            }
+            // Right side check
+            if (xIndex + 2 < xSize)
+            {
+                go1 = tiles[xIndex + 1, yIndex + (int)dir.y];
+                go2 = tiles[xIndex + 2, yIndex + (int)dir.y];
+
+                if (tileSprite == go1.GetComponent<SpriteRenderer>().sprite && tileSprite == go2.GetComponent<SpriteRenderer>().sprite)
+                {
+                    return new GameObject[] { myTile, go1, go2 };
+                }
+            }
+            // Both side check
+            if (xIndex - 1 >= 0 && xIndex + 1 < xSize)
+            {
+                go1 = tiles[xIndex + 1, yIndex + (int)dir.y];
+                go2 = tiles[xIndex - 1, yIndex + (int)dir.y];
+
+                if (tileSprite == go1.GetComponent<SpriteRenderer>().sprite && tileSprite == go2.GetComponent<SpriteRenderer>().sprite)
+                {
+                    return new GameObject[] { myTile, go1, go2 };
+                }
+            }
+        }
+        else
+        {
+            // Straight check
+            if (xIndex + (int)dir.x * 3 >= 0 && xIndex + (int)dir.x * 3 < xSize)
+            {
+                go1 = tiles[xIndex + (int)dir.x * 2, yIndex];
+                go2 = tiles[xIndex + (int)dir.x * 3, yIndex];
+
+                if (tileSprite == go1.GetComponent<SpriteRenderer>().sprite && tileSprite == go2.GetComponent<SpriteRenderer>().sprite)
+                {
+                    return new GameObject[] { myTile, go1, go2 };
+                }
+            }
+            // Bottom side check
+            if (yIndex - 2 >= 0)
+            {
+                go1 = tiles[xIndex + (int)dir.x, yIndex - 1];
+                go2 = tiles[xIndex + (int)dir.x, yIndex - 2];
+
+                if (tileSprite == go1.GetComponent<SpriteRenderer>().sprite && tileSprite == go2.GetComponent<SpriteRenderer>().sprite)
+                {
+                    return new GameObject[] { myTile, go1, go2 };
+                }
+            }
+            // Top side check
+            if (yIndex + 2 < ySize)
+            {
+                go1 = tiles[xIndex + (int)dir.x, yIndex + 1];
+                go2 = tiles[xIndex + (int)dir.x, yIndex + 2];
+
+                if (tileSprite == go1.GetComponent<SpriteRenderer>().sprite && tileSprite == go2.GetComponent<SpriteRenderer>().sprite)
+                {
+                    return new GameObject[] { myTile, go1, go2 };
+                }
+            }
+            // Both side check
+            if (yIndex - 1 >= 0 && yIndex + 1 < ySize)
+            {
+                go1 = tiles[xIndex + (int)dir.x, yIndex + 1];
+                go2 = tiles[xIndex + (int)dir.y, yIndex - 1];
+
+                if (tileSprite == go1.GetComponent<SpriteRenderer>().sprite && tileSprite == go2.GetComponent<SpriteRenderer>().sprite)
+                {
+                    return new GameObject[] { myTile, go1, go2 };
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private GameObject[] CheckHintAll()
+    {
+        foreach (GameObject tile in tiles)
+        {
+            foreach (Vector2 dir in adjacentDirections)
+            {
+                GameObject[] result = CheckHintOnDirection(tile, dir);
+                if (result != null) return result;
+            }
+        }
+
+        return null;
+    }
+
+    public void ResetHint()
+    {
+        hintTimeCurrent = 0;
+        foreach (GameObject hint in hintTiles)
+        {
+            hint.GetComponent<Tile>().RemoveHint();
+        }
+    }
 }
