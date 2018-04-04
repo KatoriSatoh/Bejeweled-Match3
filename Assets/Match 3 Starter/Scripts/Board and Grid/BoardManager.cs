@@ -23,7 +23,6 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine.UI;
 
 public class BoardManager : MonoBehaviour {
 	public static BoardManager instance;
@@ -33,6 +32,8 @@ public class BoardManager : MonoBehaviour {
 	public GameObject tile;
 	public int xSize, ySize;
 
+    public GameConfigs GameDefine;
+
 	public GameObject[,] tiles;
 
 	private List<GameObject> frenzyTiles = new List<GameObject> ();
@@ -40,45 +41,36 @@ public class BoardManager : MonoBehaviour {
 
     private Vector2[] adjacentDirections = new Vector2[] { Vector2.up, Vector2.down, Vector2.left, Vector2.right };
 
-    private float remainingTime, frenzyTimeCurrent, frenzyTimeMax, hintTimeCurrent, hintTime;
-	private float frenzyDisplay, frenzyCurrent, frenzyMax;
-	private int frenzyTileNumber = 4;
-
-    private Vector2 tileSize;
+    private float remainingTime, frenzyTimeCurrent, hintTimeCurrent, frenzyDisplay, frenzyCurrent;
 
     public bool IsAnimating { get; set; }
 	public bool IsShifting { get; set; }
 	public bool IsFrenzy { get; set; }
 
-	void Awake () {
-		remainingTime = 30.0f;
-		frenzyTimeMax = 4.0f;
-        frenzyMax = 10.0f;
-		frenzyDisplay = frenzyCurrent = frenzyTimeCurrent = hintTimeCurrent = 0.0f;
-        hintTime = 3.0f;
-
-        tileSize = tile.GetComponent<SpriteRenderer>().bounds.size;
-
-		IsFrenzy = false;
-	}
-
 	void Start () {
-		instance = GetComponent<BoardManager>();
-        
-		float boardWidth = tileSize.x * (xSize - 1);
-		float boardHeight = tileSize.y * (ySize - 1);
-		gameObject.transform.position = new Vector3 (-boardWidth / 2, -boardHeight / 2, 0);
+        instance = GetComponent<BoardManager>();
 
-        CreateBoard(tileSize.x, tileSize.y);
+        remainingTime = GameDefine.gameTime;
+        frenzyDisplay = frenzyCurrent = frenzyTimeCurrent = hintTimeCurrent = 0.0f;
+
+        IsFrenzy = false;
+        
+		float boardWidth = GameDefine.tileSize * (xSize - 1);
+		float boardHeight = GameDefine.tileSize * (ySize - 1);
+		gameObject.transform.position = new Vector3 (-boardWidth / 2 + GameDefine.boardOffsetX, -boardHeight / 2 + GameDefine.boardOffsetY, 0);
+
+        CreateBoard(GameDefine.tileSize);
     }
 
-	void Update () {
-		remainingTime -= Time.deltaTime;
-		if (remainingTime <= 0) {
-			remainingTime = 0;
-		}
+    void Update()
+    {
+        remainingTime -= Time.deltaTime;
+        if (remainingTime <= 0)
+        {
+            remainingTime = 0;
+        }
 
-        if (hintTimeCurrent == hintTime && !IsFrenzy)
+        if (hintTimeCurrent == GameDefine.hintTime && !IsFrenzy)
         {
             if ((Time.timeSinceLevelLoad * 1000) % 500 < 250)
             {
@@ -96,61 +88,44 @@ public class BoardManager : MonoBehaviour {
             }
         }
 
-        if (hintTimeCurrent < hintTime && !IsFrenzy)
+        if (hintTimeCurrent < GameDefine.hintTime && !IsFrenzy)
         {
             hintTimeCurrent += Time.deltaTime;
-            if (hintTimeCurrent >= hintTime)
+            if (hintTimeCurrent >= GameDefine.hintTime)
             {
-                hintTimeCurrent = hintTime;
+                hintTimeCurrent = GameDefine.hintTime;
                 hintTiles = CheckHintAll();
             }
         }
 
-		if (IsFrenzy && !IsShifting && !IsAnimating) {
-			frenzyTimeCurrent += Time.deltaTime;
-			if (frenzyTimeCurrent >= 1) {
-				frenzyTimeCurrent -= 1;
-
-				ReturnFrenzyTilesToNormal ();
-				SpawnFrenzyTiles ();
-			}
-
-			frenzyCurrent -= frenzyMax / frenzyTimeMax * Time.deltaTime;
-			if (frenzyCurrent <= 0) {
-				frenzyCurrent = 0;
-				frenzyTimeMax = 4.0f;
-				IsFrenzy = false;
-
-				ReturnFrenzyTilesToNormal ();
-			}
-		}
-
-        IsAnimating = CheckAnimating();
-        
-		UpdateFrenzyBar ();
-		GUIManager.instance.Time = (int)Mathf.Ceil (remainingTime);
-	}
-
-	public IEnumerator ResetFrenzySpawn() {
-		frenzyTimeCurrent = 0;
-
-		yield return new WaitUntil (() => !IsShifting && !IsAnimating);
-
-		ReturnFrenzyTilesToNormal ();
-		SpawnFrenzyTiles ();
-	}
-
-    private bool CheckAnimating() {
-        foreach (GameObject tile in tiles) {
-            if (tile.GetComponent<Tile>().isShifting)
+        if (IsFrenzy && !IsShifting && !IsAnimating)
+        {
+            frenzyTimeCurrent += Time.deltaTime;
+            if (frenzyTimeCurrent >= 1)
             {
-                return true;
+                frenzyTimeCurrent -= 1;
+
+                ReturnFrenzyTilesToNormal();
+                SpawnFrenzyTiles();
+            }
+
+            frenzyCurrent -= GameDefine.frenzyMax / GameDefine.frenzyTime * Time.deltaTime;
+            if (frenzyCurrent <= 0)
+            {
+                frenzyCurrent = 0;
+                IsFrenzy = false;
+
+                ReturnFrenzyTilesToNormal();
             }
         }
-        return false;
+
+        IsAnimating = CheckAnimating();
+
+        UpdateFrenzyBar();
+        GUIManager.instance.Time = (int)Mathf.Ceil(remainingTime);
     }
 
-	private void CreateBoard (float xOffset, float yOffset) {
+	private void CreateBoard (float offset) {
 		tiles = new GameObject[xSize, ySize];
 
         float startX = transform.position.x;
@@ -161,7 +136,7 @@ public class BoardManager : MonoBehaviour {
 
 		for (int x = 0; x < xSize; x++) {
 			for (int y = 0; y < ySize; y++) {
-				GameObject newTile = Instantiate(tile, new Vector3(startX + (xOffset * x), startY + (yOffset * y), 0), tile.transform.rotation);
+				GameObject newTile = Instantiate(tile, new Vector3(startX + (offset * x), startY + (offset * y), 0), tile.transform.rotation);
                 newTile.GetComponent<Tile>().xIndex = x;
                 newTile.GetComponent<Tile>().yIndex = y;
 				tiles[x, y] = newTile;
@@ -184,10 +159,32 @@ public class BoardManager : MonoBehaviour {
 
     public Vector3 CalculatePosition(int x, int y)
     {
-        return new Vector3(transform.position.x + tileSize.x * x, transform.position.y + tileSize.y * y, 0);
+        return new Vector3(transform.position.x + GameDefine.tileSize * x, transform.position.y + GameDefine.tileSize * y, 0);
     }
 
-	public IEnumerator FindNullTiles(bool flag = false) {
+    private bool CheckAnimating()
+    {
+        foreach (GameObject tile in tiles)
+        {
+            if (tile.GetComponent<Tile>().isShifting)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public IEnumerator ResetFrenzySpawn()
+    {
+        frenzyTimeCurrent = 0;
+
+        yield return new WaitUntil(() => !IsShifting && !IsAnimating);
+
+        ReturnFrenzyTilesToNormal();
+        SpawnFrenzyTiles();
+    }
+
+    public IEnumerator FindNullTiles(bool flag = false) {
         yield return new WaitUntil(() => !IsShifting);
 
 		for (int x = 0; x < xSize; x++) {
@@ -238,7 +235,7 @@ public class BoardManager : MonoBehaviour {
         if (!IsFrenzy)
         {
             frenzyCurrent += nullTiles.Count * 1.0f;
-            if (frenzyCurrent >= frenzyMax)
+            if (frenzyCurrent >= GameDefine.frenzyMax)
             {
                 StartFrenzyMode();
             }
@@ -276,12 +273,11 @@ public class BoardManager : MonoBehaviour {
 				frenzyDisplay = frenzyCurrent;
 		}
 
-		GUIManager.instance.Frenzy = frenzyDisplay / frenzyMax;
+		GUIManager.instance.Frenzy = frenzyDisplay / GameDefine.frenzyMax;
 	}
 
 	private void StartFrenzyMode() {
-		frenzyCurrent = frenzyMax;
-		frenzyTimeMax = 4.0f;
+		frenzyCurrent = GameDefine.frenzyMax;
 		frenzyTimeCurrent = 0.0f;
         hintTimeCurrent = 0;
 
@@ -292,7 +288,7 @@ public class BoardManager : MonoBehaviour {
 	private void SpawnFrenzyTiles() {
 		frenzyTiles.Clear ();
 
-		while (frenzyTiles.Count < frenzyTileNumber) {
+		while (frenzyTiles.Count < GameDefine.frenzyTilesSpawn) {
 			int x = Random.Range (0, xSize - 1);
 			int y = Random.Range (0, ySize - 1);
 
