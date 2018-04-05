@@ -37,6 +37,34 @@ TextureImporter:
     21300060: asset-original_30
     21300062: asset-original_31
     21300064: asset-original_32
+    21300066: asset-original_38
+    21300068: asset-original_41
+    21300070: asset-original_86
+    21300072: asset-original_106
+    21300074: asset-original_107
+    21300076: asset-original_108
+    21300078: asset-original_109
+    21300080: asset-original_110
+    21300082: asset-original_111
+    21300084: asset-original_112
+    21300086: asset-original_113
+    21300088: asset-original_114
+    21300090: asset-original_115
+    21300092: asset-original_116
+    21300094: asset-original_117
+    21300096: asset-original_118
+    21300098: asset-original_119
+    21300100: asset-original_120
+    21300102: asset-original_121
+    21300104: asset-original_122
+    21300106: asset-original_123
+    21300108: asset-original_33
+    21300110: asset-original_34
+    21300112: asset-original_35
+    21300114: asset-original_36
+    21300116: asset-original_37
+    21300118: asset-original_39
+  externalObjects: {}
   serializedVersion: 4
   mipmaps:
     mipMapMode: 0
@@ -77,8 +105,9 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spritePixelsToUnits: 30
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
   alphaIsTransparency: 1
   spriteTessellationDetail: -1
@@ -90,28 +119,34 @@ TextureImporter:
   platformSettings:
   - buildTarget: DefaultTexturePlatform
     maxTextureSize: 2048
+    resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 1
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 0
+    androidETC2FallbackOverride: 0
   - buildTarget: Standalone
     maxTextureSize: 2048
+    resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 1
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 0
+    androidETC2FallbackOverride: 0
   - buildTarget: Android
     maxTextureSize: 2048
+    resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 1
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 0
+    androidETC2FallbackOverride: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
@@ -119,12 +154,12 @@ TextureImporter:
       name: asset-original_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 1154
-        width: 179
-        height: 158
+        x: 36
+        y: 1911
+        width: 101
+        height: 96
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -133,12 +168,12 @@ TextureImporter:
       name: asset-original_1
       rect:
         serializedVersion: 2
-        x: 217
-        y: 1172
-        width: 415
-        height: 92
+        x: 156
+        y: 1913
+        width: 96
+        height: 91
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -147,12 +182,12 @@ TextureImporter:
       name: asset-original_2
       rect:
         serializedVersion: 2
-        x: 755
-        y: 1149
-        width: 144
-        height: 144
+        x: 271
+        y: 1903
+        width: 99
+        height: 98
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -161,12 +196,12 @@ TextureImporter:
       name: asset-original_3
       rect:
         serializedVersion: 2
-        x: 980
-        y: 1189
-        width: 87
-        height: 81
+        x: 400
+        y: 1892
+        width: 81
+        height: 104
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -175,12 +210,12 @@ TextureImporter:
       name: asset-original_4
       rect:
         serializedVersion: 2
-        x: 1122
-        y: 1188
-        width: 80
-        height: 75
+        x: 531
+        y: 1964
+        width: 241
+        height: 56
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -189,12 +224,12 @@ TextureImporter:
       name: asset-original_5
       rect:
         serializedVersion: 2
-        x: 1260
-        y: 1182
-        width: 83
-        height: 82
+        x: 792
+        y: 1960
+        width: 250
+        height: 64
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -203,26 +238,12 @@ TextureImporter:
       name: asset-original_6
       rect:
         serializedVersion: 2
-        x: 1386
-        y: 1170
-        width: 66
-        height: 88
+        x: 1310
+        y: 1905
+        width: 314
+        height: 121
       alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-    - serializedVersion: 2
-      name: asset-original_7
-      rect:
-        serializedVersion: 2
-        x: 17
-        y: 976
-        width: 171
-        height: 171
-      alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -231,12 +252,12 @@ TextureImporter:
       name: asset-original_8
       rect:
         serializedVersion: 2
-        x: 214
-        y: 985
-        width: 500
-        height: 162
+        x: 48
+        y: 1822
+        width: 65
+        height: 62
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -245,12 +266,12 @@ TextureImporter:
       name: asset-original_9
       rect:
         serializedVersion: 2
-        x: 993
-        y: 1099
-        width: 49
-        height: 46
+        x: 519
+        y: 1876
+        width: 265
+        height: 80
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -259,26 +280,12 @@ TextureImporter:
       name: asset-original_10
       rect:
         serializedVersion: 2
-        x: 1137
-        y: 1098
-        width: 40
-        height: 37
+        x: 833
+        y: 1835
+        width: 89
+        height: 89
       alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-    - serializedVersion: 2
-      name: asset-original_11
-      rect:
-        serializedVersion: 2
-        x: 1271
-        y: 1086
-        width: 51
-        height: 50
-      alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -287,12 +294,12 @@ TextureImporter:
       name: asset-original_12
       rect:
         serializedVersion: 2
-        x: 1403
-        y: 1080
-        width: 35
-        height: 46
+        x: 172
+        y: 1823
+        width: 55
+        height: 53
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -301,12 +308,12 @@ TextureImporter:
       name: asset-original_13
       rect:
         serializedVersion: 2
-        x: 1400
-        y: 999
-        width: 39
-        height: 39
+        x: 283
+        y: 1807
+        width: 66
+        height: 65
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -315,12 +322,12 @@ TextureImporter:
       name: asset-original_14
       rect:
         serializedVersion: 2
-        x: 206
-        y: 863
-        width: 45
-        height: 77
+        x: 417
+        y: 1803
+        width: 50
+        height: 61
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -329,12 +336,12 @@ TextureImporter:
       name: asset-original_15
       rect:
         serializedVersion: 2
-        x: 1126
-        y: 840
-        width: 283
-        height: 66
+        x: 519
+        y: 1783
+        width: 79
+        height: 79
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -343,12 +350,12 @@ TextureImporter:
       name: asset-original_16
       rect:
         serializedVersion: 2
-        x: 1426
-        y: 840
-        width: 19
-        height: 66
+        x: 610
+        y: 1783
+        width: 79
+        height: 79
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -357,12 +364,12 @@ TextureImporter:
       name: asset-original_17
       rect:
         serializedVersion: 2
-        x: 1125
-        y: 736
-        width: 287
-        height: 70
+        x: 700
+        y: 1783
+        width: 80
+        height: 79
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -371,12 +378,12 @@ TextureImporter:
       name: asset-original_18
       rect:
         serializedVersion: 2
-        x: 1115
-        y: 613
-        width: 307
-        height: 90
+        x: 1549
+        y: 1784
+        width: 79
+        height: 73
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -385,12 +392,12 @@ TextureImporter:
       name: asset-original_19
       rect:
         serializedVersion: 2
-        x: 1088
-        y: 414
-        width: 333
-        height: 147
+        x: 44
+        y: 1655
+        width: 410
+        height: 93
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -399,12 +406,12 @@ TextureImporter:
       name: asset-original_20
       rect:
         serializedVersion: 2
-        x: 1026
-        y: 204
-        width: 409
-        height: 178
+        x: 549
+        y: 1607
+        width: 136
+        height: 133
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -413,12 +420,12 @@ TextureImporter:
       name: asset-original_21
       rect:
         serializedVersion: 2
-        x: 284
-        y: 863
-        width: 59
-        height: 77
+        x: 845
+        y: 1641
+        width: 163
+        height: 167
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -427,12 +434,12 @@ TextureImporter:
       name: asset-original_22
       rect:
         serializedVersion: 2
-        x: 365
-        y: 865
-        width: 59
-        height: 75
+        x: 1061
+        y: 1638
+        width: 163
+        height: 167
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -441,26 +448,12 @@ TextureImporter:
       name: asset-original_23
       rect:
         serializedVersion: 2
-        x: 41
-        y: 863
-        width: 61
-        height: 59
+        x: 1387
+        y: 804
+        width: 297
+        height: 973
       alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-    - serializedVersion: 2
-      name: asset-original_24
-      rect:
-        serializedVersion: 2
-        x: 122
-        y: 862
-        width: 60
-        height: 78
-      alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -469,12 +462,12 @@ TextureImporter:
       name: asset-original_25
       rect:
         serializedVersion: 2
-        x: 446
-        y: 868
-        width: 56
-        height: 72
+        x: 23
+        y: 1458
+        width: 487
+        height: 174
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -483,12 +476,12 @@ TextureImporter:
       name: asset-original_26
       rect:
         serializedVersion: 2
-        x: 526
-        y: 866
-        width: 56
-        height: 73
+        x: 736
+        y: 1405
+        width: 171
+        height: 172
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -497,26 +490,12 @@ TextureImporter:
       name: asset-original_27
       rect:
         serializedVersion: 2
-        x: 607
-        y: 865
-        width: 57
-        height: 75
+        x: 987
+        y: 1413
+        width: 163
+        height: 167
       alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-    - serializedVersion: 2
-      name: asset-original_28
-      rect:
-        serializedVersion: 2
-        x: 688
-        y: 868
-        width: 55
-        height: 71
-      alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -525,26 +504,292 @@ TextureImporter:
       name: asset-original_29
       rect:
         serializedVersion: 2
-        x: 769
-        y: 866
-        width: 54
-        height: 74
+        x: 554
+        y: 1419
+        width: 142
+        height: 142
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0
     - serializedVersion: 2
-      name: asset-original_30
+      name: asset-original_38
       rect:
         serializedVersion: 2
-        x: 850
-        y: 868
-        width: 55
-        height: 72
+        x: 1083
+        y: 1130
+        width: 147
+        height: 160
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+    - serializedVersion: 2
+      name: asset-original_106
+      rect:
+        serializedVersion: 2
+        x: 30
+        y: 916
+        width: 57
+        height: 57
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+    - serializedVersion: 2
+      name: asset-original_107
+      rect:
+        serializedVersion: 2
+        x: 107
+        y: 911
+        width: 65
+        height: 77
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+    - serializedVersion: 2
+      name: asset-original_108
+      rect:
+        serializedVersion: 2
+        x: 188
+        y: 911
+        width: 58
+        height: 78
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+    - serializedVersion: 2
+      name: asset-original_109
+      rect:
+        serializedVersion: 2
+        x: 264
+        y: 910
+        width: 66
+        height: 79
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+    - serializedVersion: 2
+      name: asset-original_110
+      rect:
+        serializedVersion: 2
+        x: 348
+        y: 911
+        width: 64
+        height: 79
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+    - serializedVersion: 2
+      name: asset-original_111
+      rect:
+        serializedVersion: 2
+        x: 430
+        y: 911
+        width: 72
+        height: 78
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+    - serializedVersion: 2
+      name: asset-original_112
+      rect:
+        serializedVersion: 2
+        x: 520
+        y: 910
+        width: 63
+        height: 79
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+    - serializedVersion: 2
+      name: asset-original_113
+      rect:
+        serializedVersion: 2
+        x: 601
+        y: 911
+        width: 64
+        height: 77
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+    - serializedVersion: 2
+      name: asset-original_114
+      rect:
+        serializedVersion: 2
+        x: 687
+        y: 911
+        width: 63
+        height: 76
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+    - serializedVersion: 2
+      name: asset-original_115
+      rect:
+        serializedVersion: 2
+        x: 764
+        y: 911
+        width: 65
+        height: 77
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+    - serializedVersion: 2
+      name: asset-original_116
+      rect:
+        serializedVersion: 2
+        x: 844
+        y: 911
+        width: 66
+        height: 77
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+    - serializedVersion: 2
+      name: asset-original_117
+      rect:
+        serializedVersion: 2
+        x: 959
+        y: 853
+        width: 409
+        height: 179
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+    - serializedVersion: 2
+      name: asset-original_119
+      rect:
+        serializedVersion: 2
+        x: 1386
+        y: 863
+        width: 5
+        height: 12
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+    - serializedVersion: 2
+      name: asset-original_121
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 547
+        width: 948
+        height: 297
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+    - serializedVersion: 2
+      name: asset-original_122
+      rect:
+        serializedVersion: 2
+        x: 1371
+        y: 794
+        width: 20
+        height: 26
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+    - serializedVersion: 2
+      name: asset-original_7
+      rect:
+        serializedVersion: 2
+        x: 1728
+        y: 1927
+        width: 100
+        height: 77
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+    - serializedVersion: 2
+      name: asset-original_11
+      rect:
+        serializedVersion: 2
+        x: 1728
+        y: 1798
+        width: 111
+        height: 81
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+    - serializedVersion: 2
+      name: asset-original_24
+      rect:
+        serializedVersion: 2
+        x: 1728
+        y: 1683
+        width: 105
+        height: 80
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+    - serializedVersion: 2
+      name: asset-original_28
+      rect:
+        serializedVersion: 2
+        x: 1728
+        y: 1572
+        width: 118
+        height: 79
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -553,12 +798,12 @@ TextureImporter:
       name: asset-original_31
       rect:
         serializedVersion: 2
-        x: 743
-        y: 653
-        width: 180
-        height: 178
-      alignment: 9
-      pivot: {x: 0.48243853, y: 0.47316995}
+        x: 1728
+        y: 1443
+        width: 110
+        height: 77
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -567,10 +812,108 @@ TextureImporter:
       name: asset-original_32
       rect:
         serializedVersion: 2
-        x: 551
-        y: 200
-        width: 455
-        height: 229
+        x: 1728
+        y: 1314
+        width: 102
+        height: 75
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+    - serializedVersion: 2
+      name: asset-original_33
+      rect:
+        serializedVersion: 2
+        x: 1728
+        y: 1185
+        width: 106
+        height: 73
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+    - serializedVersion: 2
+      name: asset-original_34
+      rect:
+        serializedVersion: 2
+        x: 1728
+        y: 1077
+        width: 100
+        height: 68
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+    - serializedVersion: 2
+      name: asset-original_35
+      rect:
+        serializedVersion: 2
+        x: 1728
+        y: 951
+        width: 100
+        height: 62
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+    - serializedVersion: 2
+      name: asset-original_36
+      rect:
+        serializedVersion: 2
+        x: 1728
+        y: 801
+        width: 104
+        height: 79
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+    - serializedVersion: 2
+      name: asset-original_37
+      rect:
+        serializedVersion: 2
+        x: 1728
+        y: 690
+        width: 100
+        height: 75
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+    - serializedVersion: 2
+      name: asset-original_30
+      rect:
+        serializedVersion: 2
+        x: 1165
+        y: 1467
+        width: 113
+        height: 104
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+    - serializedVersion: 2
+      name: asset-original_39
+      rect:
+        serializedVersion: 2
+        x: 1181
+        y: 1332
+        width: 122
+        height: 128
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
