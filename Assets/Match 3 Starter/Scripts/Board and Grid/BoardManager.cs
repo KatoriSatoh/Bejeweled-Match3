@@ -432,6 +432,8 @@ public class BoardManager : MonoBehaviour {
     public void ResetHint()
     {
         hintTimeCurrent = 0;
+
+        if (hintTiles == null) return;
         foreach (GameObject hint in hintTiles)
         {
             hint.GetComponent<Tile>().RemoveHint();
