@@ -243,6 +243,8 @@ public class Tile : MonoBehaviour {
 		int v = ClearMatch (new Vector2[2] { Vector2.up, Vector2.down });
 
 		if (matchFound) {
+			ComboMgr.instance.AddCombo (h + v + 1);
+
 			if (h + v < 3) {
 				render.sprite = null;
 			} else {

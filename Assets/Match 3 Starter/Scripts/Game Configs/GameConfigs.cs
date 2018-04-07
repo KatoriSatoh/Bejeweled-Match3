@@ -18,4 +18,8 @@ public class GameConfigs : ScriptableObject {
 
     public int scoreEachItem;
     public int frenzyTilesSpawn;
+
+	public float comboOffsetY;
+	public float comboScaleMin;
+	public float comboScaleMax;
 }
