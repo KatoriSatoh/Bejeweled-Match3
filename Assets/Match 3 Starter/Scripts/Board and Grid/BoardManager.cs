@@ -149,7 +149,8 @@ public class BoardManager : MonoBehaviour {
 				possibleCharacters.Remove (previousBelow);
 
 				Sprite newSprite = possibleCharacters [Random.Range (0, possibleCharacters.Count)];
-				newTile.GetComponent<SpriteRenderer> ().sprite = newSprite;
+				int type = characters.IndexOf (newSprite);
+				newTile.GetComponent<Tile> ().SetType (type);
 
 				previousLeft[y] = newSprite;
 				previousBelow = newSprite;
@@ -166,7 +167,7 @@ public class BoardManager : MonoBehaviour {
     {
         foreach (GameObject tile in tiles)
         {
-            if (tile.GetComponent<Tile>().isShifting)
+			if (tile.GetComponent<Tile>().isShifting || tile.GetComponent<Tile>().isAnimating)
             {
                 return true;
             }
@@ -185,11 +186,11 @@ public class BoardManager : MonoBehaviour {
     }
 
     public IEnumerator FindNullTiles(bool flag = false) {
-        yield return new WaitUntil(() => !IsShifting);
+		yield return new WaitUntil(() => !IsShifting && !IsAnimating);
 
 		for (int x = 0; x < xSize; x++) {
 			for (int y = 0; y < ySize; y++) {
-				if (tiles [x, y].GetComponent<SpriteRenderer> ().sprite == null)
+				if (tiles[x, y].GetComponent<Tile>().isNull)
                 {
                     ShiftTilesDown(x, y);
                     break;
@@ -212,7 +213,7 @@ public class BoardManager : MonoBehaviour {
         List<GameObject> nullTiles = new List<GameObject>();
 
 		for (int y = yStart; y < ySize; y++) {
-			if (tiles[x, y].GetComponent<SpriteRenderer>().sprite == null)
+			if (tiles[x, y].GetComponent<Tile>().isNull)
             {
                 nullTiles.Add(tiles[x, y]);
             }
@@ -226,7 +227,7 @@ public class BoardManager : MonoBehaviour {
         shiftIndex = 0;
         foreach (GameObject tile in nullTiles) {
             tile.GetComponent<Tile>().MoveTo(x, ySize + shiftIndex);
-            tile.GetComponent<SpriteRenderer>().sprite = GetNewSprite(x, ySize + shiftIndex - nullTiles.Count);
+			tile.GetComponent<Tile>().SetType(GetNewType(x, ySize + shiftIndex - nullTiles.Count));
             tile.GetComponent<Tile>().ShiftTo(x, ySize + shiftIndex - nullTiles.Count);
             shiftIndex++;
         }
@@ -244,21 +245,21 @@ public class BoardManager : MonoBehaviour {
 		IsShifting = false;
 	}
 
-	private Sprite GetNewSprite(int x, int y) {
+	private int GetNewType(int x, int y) {
 		List<Sprite> possibleCharacters = new List<Sprite> ();
 		possibleCharacters.AddRange (characters);
 
 		if (x > 0) {
-			possibleCharacters.Remove (tiles [x - 1, y].GetComponent<SpriteRenderer> ().sprite);
+			possibleCharacters.Remove (characters[tiles [x - 1, y].GetComponent<Tile> ().tileType]);
 		}
 		if (x < xSize - 1) {
-			possibleCharacters.Remove (tiles [x + 1, y].GetComponent<SpriteRenderer> ().sprite);
+			possibleCharacters.Remove (characters[tiles [x + 1, y].GetComponent<Tile> ().tileType]);
 		}
 		if (y > 0) {
-			possibleCharacters.Remove (tiles [x, y - 1].GetComponent<SpriteRenderer> ().sprite);
+			possibleCharacters.Remove (characters[tiles [x, y - 1].GetComponent<Tile> ().tileType]);
 		}
 
-		return possibleCharacters [Random.Range (0, possibleCharacters.Count)];
+		return characters.IndexOf(possibleCharacters [Random.Range (0, possibleCharacters.Count)]);
 	}
 
 	private void UpdateFrenzyBar() {

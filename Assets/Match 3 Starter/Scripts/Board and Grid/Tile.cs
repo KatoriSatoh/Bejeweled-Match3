@@ -30,24 +30,31 @@ public class Tile : MonoBehaviour {
     private static Tile previousSelected = null;
     private static Tile swappingTile = null;
 
+	public int tileType { get; set; }
     public int xIndex { get; set; }
     public int yIndex { get; set; }
 
     private SpriteRenderer render;
-	private Sprite previousSprite;
+	private int previousType;
 
     private bool isSelected = false;
     private bool matchFound = false;
     private bool failedSwap = false;
 
     public bool isShifting { get; set; }
+	public bool isAnimating { get; set; }
+	public bool isNull { get; set; }
 
 	private Vector2[] adjacentDirections = new Vector2[] { Vector2.up, Vector2.down, Vector2.left, Vector2.right };
 
 	void Awake() {
 		render = GetComponent<SpriteRenderer>();
 
+		tileType = 0;
+
         isShifting = false;
+		isAnimating = false;
+		isNull = true;
     }
 
     void Update()
@@ -79,6 +86,14 @@ public class Tile : MonoBehaviour {
 		previousSelected = null;
 	}
 
+	public void SetType(int type)
+	{
+		tileType = type;
+		GetComponent<Animator> ().SetInteger ("Type", type);
+		GetComponent<Animator> ().SetBool ("Exploding", false);
+		isNull = false;
+	}
+
     public void SetHint()
     {
         if (isSelected) return;
@@ -93,12 +108,23 @@ public class Tile : MonoBehaviour {
         render.color = Color.white;
     }
 
+	private void AnimateOn()
+	{
+		isAnimating = true;
+	}
+
+	private void AnimateOff()
+	{
+		isAnimating = false;
+		isNull = true;
+	}
+
 	private bool IsSpecialTile() {
-		return render.sprite == BoardManager.instance.explodeSprite || render.sprite == BoardManager.instance.specialSprite;
+		return tileType == 4 || tileType == 5;
 	}
 
 	void OnMouseDown() {
-		if (render.sprite == null || BoardManager.instance.IsShifting || BoardManager.instance.IsAnimating) {
+		if (BoardManager.instance.IsShifting || BoardManager.instance.IsAnimating) {
 			return;
 		}
 
@@ -190,12 +216,14 @@ public class Tile : MonoBehaviour {
 	}
 
 	private GameObject GetAdjacent(Vector2 castDir) {
-		RaycastHit2D hit = Physics2D.Raycast (transform.position, castDir);
-		if (hit.collider != null) {
-			return hit.collider.gameObject;
-		}
+		int x = xIndex + (int)castDir.x;
+		int y = yIndex + (int)castDir.y;
 
-		return null;
+		if (x > -1 && x < BoardManager.instance.xSize && y > -1 && y < BoardManager.instance.ySize) {
+			return BoardManager.instance.tiles [x, y];
+		} else {
+			return null;
+		}
 	}
 
 	private List<GameObject> GetAllAdjacentTiles() {
@@ -209,11 +237,11 @@ public class Tile : MonoBehaviour {
 
 	private List<GameObject> FindMatch(Vector2 castDir) {
 		List<GameObject> matchingTiles = new List<GameObject> ();
-		RaycastHit2D hit = Physics2D.Raycast (transform.position, castDir);
+		GameObject adjacentTile = GetAdjacent (castDir);
 
-		while (hit.collider != null && hit.collider.GetComponent<SpriteRenderer> ().sprite == render.sprite) {
-			matchingTiles.Add (hit.collider.gameObject);
-			hit = Physics2D.Raycast (hit.collider.transform.position, castDir);
+		while (adjacentTile != null && adjacentTile.GetComponent<Tile>().tileType == tileType) {
+			matchingTiles.Add (adjacentTile);
+			adjacentTile = adjacentTile.GetComponent<Tile>().GetAdjacent (castDir);
 		}
 
 		return matchingTiles;
@@ -226,29 +254,31 @@ public class Tile : MonoBehaviour {
 		}
 		if (matchingTiles.Count >= 2) {
 			for (int i = 0; i < matchingTiles.Count; i++) {
-				matchingTiles [i].GetComponent<SpriteRenderer> ().sprite = null;
+				matchingTiles[i].GetComponent<Animator>().SetBool("Exploding", true);
+				matchingTiles [i].GetComponent<Tile> ().AnimateOn ();
 			}
 			matchFound = true;
-
 			return matchingTiles.Count;
 		}
+
 		return 0;
 	}
 
 	public void ClearAllMatches() {
-		if (render.sprite == null)
-			return;
-
 		int h = ClearMatch (new Vector2[2] { Vector2.left, Vector2.right });
 		int v = ClearMatch (new Vector2[2] { Vector2.up, Vector2.down });
 
 		if (matchFound) {
-			ComboMgr.instance.AddCombo (h + v + 1);
-
 			if (h + v < 3) {
-				render.sprite = null;
+				GetComponent<Animator> ().SetBool ("Exploding", true);
+				AnimateOn ();
 			} else {
-				render.sprite = BoardManager.instance.explodeSprite;
+				if (h + v > 4) {
+					ComboMgr.instance.AddCombo (h + v + 1);
+					GUIManager.instance.Score += h + v + 1;
+				}
+
+				SetType (4);
 				GUIManager.instance.Score += 10;
 			}
 			matchFound = false;
@@ -267,18 +297,18 @@ public class Tile : MonoBehaviour {
 	private void ExplodeTilesAround() {
 		List<GameObject> aroundTiles = new List<GameObject> ();
 		for (int i = 0; i < adjacentDirections.Length; i++) {
-			RaycastHit2D hit = Physics2D.Raycast (transform.position, adjacentDirections [i]);
-			if (hit.collider != null) {
-				aroundTiles.Add (hit.collider.gameObject);
+			GameObject adjacentTile = GetAdjacent (adjacentDirections [i]);
+			if (adjacentTile != null) {
+				aroundTiles.Add (adjacentTile);
 
 				if (adjacentDirections [i] == Vector2.up || adjacentDirections [i] == Vector2.down) {
-					RaycastHit2D left = Physics2D.Raycast (hit.collider.transform.position, Vector2.left);
-					RaycastHit2D right = Physics2D.Raycast (hit.collider.transform.position, Vector2.right);
+					GameObject leftTile = adjacentTile.GetComponent<Tile>().GetAdjacent (Vector2.left);
+					GameObject rightTile = adjacentTile.GetComponent<Tile>().GetAdjacent (Vector2.right);
 
-					if (left.collider != null)
-						aroundTiles.Add (left.collider.gameObject);
-					if (right.collider != null)
-						aroundTiles.Add (right.collider.gameObject);
+					if (leftTile != null)
+						aroundTiles.Add (leftTile);
+					if (rightTile != null)
+						aroundTiles.Add (rightTile);
 				}
 			}
 		}
@@ -286,7 +316,8 @@ public class Tile : MonoBehaviour {
 			if (aroundTiles [i].GetComponent<Tile> ().IsSpecialTile ()) {
 				aroundTiles [i].GetComponent<Tile> ().TriggerSpecialTile ();
 			} else {
-				aroundTiles [i].GetComponent<SpriteRenderer> ().sprite = null;
+				aroundTiles [i].GetComponent<Animator> ().SetBool ("Exploding", true);
+				aroundTiles [i].GetComponent<Tile> ().AnimateOn ();
 			}
 		}
 	}
@@ -294,57 +325,53 @@ public class Tile : MonoBehaviour {
 	private void ExplodeCrossLine() {
 		List<GameObject> crossTiles = new List<GameObject> ();
 		for (int i = 0; i < adjacentDirections.Length; i++) {
-			RaycastHit2D hit = Physics2D.Raycast (transform.position, adjacentDirections [i]);
-			while (hit.collider != null) {
-				crossTiles.Add (hit.collider.gameObject);
-				hit = Physics2D.Raycast (hit.collider.transform.position, adjacentDirections [i]);
+			GameObject adjacentTile = GetAdjacent (adjacentDirections [i]);
+			while (adjacentTile != null) {
+				crossTiles.Add (adjacentTile);
+				adjacentTile = adjacentTile.GetComponent<Tile>().GetAdjacent (adjacentDirections [i]);
 			}
 		}
 		for (int i = 0; i < crossTiles.Count; i++) {
 			if (crossTiles [i].GetComponent<Tile> ().IsSpecialTile ()) {
 				crossTiles [i].GetComponent<Tile> ().TriggerSpecialTile ();
 			} else {
-				crossTiles [i].GetComponent<SpriteRenderer> ().sprite = null;
+				crossTiles [i].GetComponent<Animator> ().SetBool ("Exploding", true);
+				crossTiles [i].GetComponent<Tile> ().AnimateOn ();
 			}
 		}
 	}
 
 	private void TriggerSpecialTile() {
-		if (render.sprite == null)
-			return;
-
         BoardManager.instance.ResetHint();
 
         bool isSpecialTriggered = false;
 
-		if (render.sprite == BoardManager.instance.explodeSprite) {
-			render.sprite = null;
+		if (tileType == 4) {
+			GetComponent<Animator> ().SetBool ("Exploding", true);
+			AnimateOn ();
 			ExplodeTilesAround ();
 		} else {
-			render.sprite = null;
+			GetComponent<Animator> ().SetBool ("Exploding", true);
+			AnimateOn ();
 			ExplodeCrossLine ();
 
 			isSpecialTriggered = true;
 		}
 
-		//StopCoroutine (BoardManager.instance.FindNullTiles (isSpecialTriggered));
+		BoardManager.instance.IsAnimating = true;
+		StopCoroutine (BoardManager.instance.FindNullTiles (isSpecialTriggered));
 		StartCoroutine (BoardManager.instance.FindNullTiles (isSpecialTriggered));
-
-//		if (isSpecialTriggered) {
-//			StopCoroutine (BoardManager.instance.ResetFrenzySpawn ());
-//			StartCoroutine (BoardManager.instance.ResetFrenzySpawn ());
-//		}
 
 		SFXManager.instance.PlaySFX (Clip.Clear);
 	}
 
 	public void SetFrenzy() {
-		previousSprite = render.sprite;
-		render.sprite = BoardManager.instance.specialSprite;
+		previousType = tileType;
+		SetType (5);
 	}
 
 	public void SetNormal() {
-		if (render.sprite == BoardManager.instance.specialSprite)
-			render.sprite = previousSprite;
+		if (tileType == 5)
+			SetType (previousType);
 	}
 }
