@@ -220,6 +220,8 @@ public class Tile : MonoBehaviour {
 		int y = yIndex + (int)castDir.y;
 
 		if (x > -1 && x < BoardManager.instance.xSize && y > -1 && y < BoardManager.instance.ySize) {
+			if (BoardManager.instance.tiles [x, y].GetComponent<Tile> ().isAnimating)
+				return null;
 			return BoardManager.instance.tiles [x, y];
 		} else {
 			return null;
@@ -239,7 +241,7 @@ public class Tile : MonoBehaviour {
 		List<GameObject> matchingTiles = new List<GameObject> ();
 		GameObject adjacentTile = GetAdjacent (castDir);
 
-		while (adjacentTile != null && adjacentTile.GetComponent<Tile>().tileType == tileType) {
+		while (adjacentTile != null && !IsSpecialTile() && adjacentTile.GetComponent<Tile>().tileType == tileType) {
 			matchingTiles.Add (adjacentTile);
 			adjacentTile = adjacentTile.GetComponent<Tile>().GetAdjacent (castDir);
 		}
@@ -254,6 +256,8 @@ public class Tile : MonoBehaviour {
 		}
 		if (matchingTiles.Count >= 2) {
 			for (int i = 0; i < matchingTiles.Count; i++) {
+				if (matchingTiles [i].GetComponent<Tile> ().isAnimating || matchingTiles [i].GetComponent<Tile> ().isNull)
+					continue;
 				matchingTiles[i].GetComponent<Animator>().SetBool("Exploding", true);
 				matchingTiles [i].GetComponent<Tile> ().AnimateOn ();
 			}
@@ -265,24 +269,30 @@ public class Tile : MonoBehaviour {
 	}
 
 	public void ClearAllMatches() {
+		if (isNull)
+			return;
+
 		int h = ClearMatch (new Vector2[2] { Vector2.left, Vector2.right });
 		int v = ClearMatch (new Vector2[2] { Vector2.up, Vector2.down });
 
 		if (matchFound) {
 			if (h + v < 3) {
-				GetComponent<Animator> ().SetBool ("Exploding", true);
-				AnimateOn ();
-			} else {
-				if (h + v > 4) {
-					ComboMgr.instance.AddCombo (h + v + 1);
-					GUIManager.instance.Score += h + v + 1;
+				if (!isAnimating && !isNull) {
+					GetComponent<Animator> ().SetBool ("Exploding", true);
+					AnimateOn ();
 				}
+			} else {
+//				if (h + v > 3) {
+//					ComboMgr.instance.AddCombo (h + v + 1);
+//					GUIManager.instance.Score += h + v + 1;
+//				}
 
 				SetType (4);
 				GUIManager.instance.Score += 10;
 			}
 			matchFound = false;
 
+			BoardManager.instance.IsAnimating = true;
 			StopCoroutine (BoardManager.instance.FindNullTiles ());
 			StartCoroutine (BoardManager.instance.FindNullTiles ());
 
@@ -313,6 +323,9 @@ public class Tile : MonoBehaviour {
 			}
 		}
 		for (int i = 0; i < aroundTiles.Count; i++) {
+			if (aroundTiles [i].GetComponent<Tile> ().isAnimating || aroundTiles [i].GetComponent<Tile> ().isNull)
+				continue;
+
 			if (aroundTiles [i].GetComponent<Tile> ().IsSpecialTile ()) {
 				aroundTiles [i].GetComponent<Tile> ().TriggerSpecialTile ();
 			} else {
@@ -332,6 +345,9 @@ public class Tile : MonoBehaviour {
 			}
 		}
 		for (int i = 0; i < crossTiles.Count; i++) {
+			if (crossTiles [i].GetComponent<Tile> ().isAnimating || crossTiles [i].GetComponent<Tile> ().isNull)
+				continue;
+			
 			if (crossTiles [i].GetComponent<Tile> ().IsSpecialTile ()) {
 				crossTiles [i].GetComponent<Tile> ().TriggerSpecialTile ();
 			} else {
@@ -342,17 +358,26 @@ public class Tile : MonoBehaviour {
 	}
 
 	private void TriggerSpecialTile() {
+		if (isNull)
+			return;
+
         BoardManager.instance.ResetHint();
 
         bool isSpecialTriggered = false;
 
 		if (tileType == 4) {
-			GetComponent<Animator> ().SetBool ("Exploding", true);
-			AnimateOn ();
+			if (!isAnimating && !isNull) {
+				GetComponent<Animator> ().SetBool ("Exploding", true);
+				AnimateOn ();
+			}
+
 			ExplodeTilesAround ();
 		} else {
-			GetComponent<Animator> ().SetBool ("Exploding", true);
-			AnimateOn ();
+			if (!isAnimating && !isNull) {
+				GetComponent<Animator> ().SetBool ("Exploding", true);
+				AnimateOn ();
+			}
+
 			ExplodeCrossLine ();
 
 			isSpecialTriggered = true;

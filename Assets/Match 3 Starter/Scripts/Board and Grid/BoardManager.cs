@@ -169,6 +169,8 @@ public class BoardManager : MonoBehaviour {
         {
 			if (tile.GetComponent<Tile>().isShifting || tile.GetComponent<Tile>().isAnimating)
             {
+				Debug.Log ("x: " + tile.GetComponent<Tile> ().xIndex + ", y: " + tile.GetComponent<Tile> ().yIndex);
+				Debug.Log ("dang shift: " + tile.GetComponent<Tile> ().isShifting + ", dang anim: " + tile.GetComponent<Tile> ().isAnimating);
                 return true;
             }
         }
@@ -227,7 +229,7 @@ public class BoardManager : MonoBehaviour {
         shiftIndex = 0;
         foreach (GameObject tile in nullTiles) {
             tile.GetComponent<Tile>().MoveTo(x, ySize + shiftIndex);
-			tile.GetComponent<Tile>().SetType(GetNewType(x, ySize + shiftIndex - nullTiles.Count));
+			tile.GetComponent<Tile>().SetType(Random.Range(0, 3));
             tile.GetComponent<Tile>().ShiftTo(x, ySize + shiftIndex - nullTiles.Count);
             shiftIndex++;
         }
@@ -245,22 +247,22 @@ public class BoardManager : MonoBehaviour {
 		IsShifting = false;
 	}
 
-	private int GetNewType(int x, int y) {
-		List<Sprite> possibleCharacters = new List<Sprite> ();
-		possibleCharacters.AddRange (characters);
-
-		if (x > 0) {
-			possibleCharacters.Remove (characters[tiles [x - 1, y].GetComponent<Tile> ().tileType]);
-		}
-		if (x < xSize - 1) {
-			possibleCharacters.Remove (characters[tiles [x + 1, y].GetComponent<Tile> ().tileType]);
-		}
-		if (y > 0) {
-			possibleCharacters.Remove (characters[tiles [x, y - 1].GetComponent<Tile> ().tileType]);
-		}
-
-		return characters.IndexOf(possibleCharacters [Random.Range (0, possibleCharacters.Count)]);
-	}
+//	private int GetNewType(int x, int y) {
+//		List<Sprite> possibleCharacters = new List<Sprite> ();
+//		possibleCharacters.AddRange (characters);
+//
+//		if (x > 0) {
+//			possibleCharacters.Remove (characters[tiles [x - 1, y].GetComponent<Tile> ().tileType]);
+//		}
+//		if (x < xSize - 1) {
+//			possibleCharacters.Remove (characters[tiles [x + 1, y].GetComponent<Tile> ().tileType]);
+//		}
+//		if (y > 0) {
+//			possibleCharacters.Remove (characters[tiles [x, y - 1].GetComponent<Tile> ().tileType]);
+//		}
+//
+//		return characters.IndexOf(possibleCharacters [Random.Range (0, possibleCharacters.Count)]);
+//	}
 
 	private void UpdateFrenzyBar() {
 		if (frenzyDisplay < frenzyCurrent) {
@@ -313,7 +315,7 @@ public class BoardManager : MonoBehaviour {
     {
         int xIndex = myTile.GetComponent<Tile>().xIndex;
         int yIndex = myTile.GetComponent<Tile>().yIndex;
-        Sprite tileSprite = myTile.GetComponent<SpriteRenderer>().sprite;
+		int myType = myTile.GetComponent<Tile>().tileType;
 
         if (xIndex + (int)dir.x < 0 || yIndex + (int)dir.y < 0 || xIndex + (int)dir.x > xSize - 1 || yIndex + (int)dir.y > ySize - 1) return null;
 
@@ -326,7 +328,7 @@ public class BoardManager : MonoBehaviour {
                 go1 = tiles[xIndex, yIndex + (int)dir.y * 2];
                 go2 = tiles[xIndex, yIndex + (int)dir.y * 3];
 
-                if (tileSprite == go1.GetComponent<SpriteRenderer>().sprite && tileSprite == go2.GetComponent<SpriteRenderer>().sprite)
+                if (myType == go1.GetComponent<Tile>().tileType && myType == go2.GetComponent<Tile>().tileType)
                 {
                     return new GameObject[] { myTile, go1, go2 };
                 }
@@ -337,7 +339,7 @@ public class BoardManager : MonoBehaviour {
                 go1 = tiles[xIndex - 1, yIndex + (int)dir.y];
                 go2 = tiles[xIndex - 2, yIndex + (int)dir.y];
 
-                if (tileSprite == go1.GetComponent<SpriteRenderer>().sprite && tileSprite == go2.GetComponent<SpriteRenderer>().sprite)
+                if (myType == go1.GetComponent<Tile>().tileType && myType == go2.GetComponent<Tile>().tileType)
                 {
                     return new GameObject[] { myTile, go1, go2 };
                 }
@@ -348,7 +350,7 @@ public class BoardManager : MonoBehaviour {
                 go1 = tiles[xIndex + 1, yIndex + (int)dir.y];
                 go2 = tiles[xIndex + 2, yIndex + (int)dir.y];
 
-                if (tileSprite == go1.GetComponent<SpriteRenderer>().sprite && tileSprite == go2.GetComponent<SpriteRenderer>().sprite)
+                if (myType == go1.GetComponent<Tile>().tileType && myType == go2.GetComponent<Tile>().tileType)
                 {
                     return new GameObject[] { myTile, go1, go2 };
                 }
@@ -359,7 +361,7 @@ public class BoardManager : MonoBehaviour {
                 go1 = tiles[xIndex + 1, yIndex + (int)dir.y];
                 go2 = tiles[xIndex - 1, yIndex + (int)dir.y];
 
-                if (tileSprite == go1.GetComponent<SpriteRenderer>().sprite && tileSprite == go2.GetComponent<SpriteRenderer>().sprite)
+                if (myType == go1.GetComponent<Tile>().tileType && myType == go2.GetComponent<Tile>().tileType)
                 {
                     return new GameObject[] { myTile, go1, go2 };
                 }
@@ -373,7 +375,7 @@ public class BoardManager : MonoBehaviour {
                 go1 = tiles[xIndex + (int)dir.x * 2, yIndex];
                 go2 = tiles[xIndex + (int)dir.x * 3, yIndex];
 
-                if (tileSprite == go1.GetComponent<SpriteRenderer>().sprite && tileSprite == go2.GetComponent<SpriteRenderer>().sprite)
+                if (myType == go1.GetComponent<Tile>().tileType && myType == go2.GetComponent<Tile>().tileType)
                 {
                     return new GameObject[] { myTile, go1, go2 };
                 }
@@ -384,7 +386,7 @@ public class BoardManager : MonoBehaviour {
                 go1 = tiles[xIndex + (int)dir.x, yIndex - 1];
                 go2 = tiles[xIndex + (int)dir.x, yIndex - 2];
 
-                if (tileSprite == go1.GetComponent<SpriteRenderer>().sprite && tileSprite == go2.GetComponent<SpriteRenderer>().sprite)
+                if (myType == go1.GetComponent<Tile>().tileType && myType == go2.GetComponent<Tile>().tileType)
                 {
                     return new GameObject[] { myTile, go1, go2 };
                 }
@@ -395,7 +397,7 @@ public class BoardManager : MonoBehaviour {
                 go1 = tiles[xIndex + (int)dir.x, yIndex + 1];
                 go2 = tiles[xIndex + (int)dir.x, yIndex + 2];
 
-                if (tileSprite == go1.GetComponent<SpriteRenderer>().sprite && tileSprite == go2.GetComponent<SpriteRenderer>().sprite)
+                if (myType == go1.GetComponent<Tile>().tileType && myType == go2.GetComponent<Tile>().tileType)
                 {
                     return new GameObject[] { myTile, go1, go2 };
                 }
@@ -406,7 +408,7 @@ public class BoardManager : MonoBehaviour {
                 go1 = tiles[xIndex + (int)dir.x, yIndex + 1];
                 go2 = tiles[xIndex + (int)dir.y, yIndex - 1];
 
-                if (tileSprite == go1.GetComponent<SpriteRenderer>().sprite && tileSprite == go2.GetComponent<SpriteRenderer>().sprite)
+                if (myType == go1.GetComponent<Tile>().tileType && myType == go2.GetComponent<Tile>().tileType)
                 {
                     return new GameObject[] { myTile, go1, go2 };
                 }
