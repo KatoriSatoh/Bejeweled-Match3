@@ -169,8 +169,8 @@ public class BoardManager : MonoBehaviour {
         {
 			if (tile.GetComponent<Tile>().isShifting || tile.GetComponent<Tile>().isAnimating)
             {
-				Debug.Log ("x: " + tile.GetComponent<Tile> ().xIndex + ", y: " + tile.GetComponent<Tile> ().yIndex);
-				Debug.Log ("dang shift: " + tile.GetComponent<Tile> ().isShifting + ", dang anim: " + tile.GetComponent<Tile> ().isAnimating);
+//				Debug.Log ("x: " + tile.GetComponent<Tile> ().xIndex + ", y: " + tile.GetComponent<Tile> ().yIndex);
+//				Debug.Log ("dang shift: " + tile.GetComponent<Tile> ().isShifting + ", dang anim: " + tile.GetComponent<Tile> ().isAnimating);
                 return true;
             }
         }
@@ -229,7 +229,7 @@ public class BoardManager : MonoBehaviour {
         shiftIndex = 0;
         foreach (GameObject tile in nullTiles) {
             tile.GetComponent<Tile>().MoveTo(x, ySize + shiftIndex);
-			tile.GetComponent<Tile>().SetType(Random.Range(0, 3));
+			tile.GetComponent<Tile>().SetType(GetNewType(x, ySize + shiftIndex - nullTiles.Count));
             tile.GetComponent<Tile>().ShiftTo(x, ySize + shiftIndex - nullTiles.Count);
             shiftIndex++;
         }
@@ -247,22 +247,22 @@ public class BoardManager : MonoBehaviour {
 		IsShifting = false;
 	}
 
-//	private int GetNewType(int x, int y) {
-//		List<Sprite> possibleCharacters = new List<Sprite> ();
-//		possibleCharacters.AddRange (characters);
-//
-//		if (x > 0) {
-//			possibleCharacters.Remove (characters[tiles [x - 1, y].GetComponent<Tile> ().tileType]);
-//		}
-//		if (x < xSize - 1) {
-//			possibleCharacters.Remove (characters[tiles [x + 1, y].GetComponent<Tile> ().tileType]);
-//		}
-//		if (y > 0) {
-//			possibleCharacters.Remove (characters[tiles [x, y - 1].GetComponent<Tile> ().tileType]);
-//		}
-//
-//		return characters.IndexOf(possibleCharacters [Random.Range (0, possibleCharacters.Count)]);
-//	}
+	private int GetNewType(int x, int y) {
+		List<int> typeList = new List<int> (){ 0, 1, 2, 3 };
+
+		if (x > 0 && !tiles[x - 1, y].GetComponent<Tile>().isNull) {
+			typeList.Remove (tiles [x - 1, y].GetComponent<Tile> ().tileType);
+		}
+		if (x < xSize - 1 && !tiles[x + 1, y].GetComponent<Tile>().isNull) {
+			typeList.Remove (tiles [x + 1, y].GetComponent<Tile> ().tileType);
+		}
+		if (y > 0 && !tiles[x, y - 1].GetComponent<Tile>().isNull) {
+			typeList.Remove (tiles [x, y - 1].GetComponent<Tile> ().tileType);
+		}
+
+		int result = typeList [Random.Range (0, typeList.Count)];
+		return result;
+	}
 
 	private void UpdateFrenzyBar() {
 		if (frenzyDisplay < frenzyCurrent) {

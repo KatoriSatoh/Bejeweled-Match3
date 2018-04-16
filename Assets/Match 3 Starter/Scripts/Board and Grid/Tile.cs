@@ -269,7 +269,7 @@ public class Tile : MonoBehaviour {
 	}
 
 	public void ClearAllMatches() {
-		if (isNull)
+		if (isNull || isAnimating)
 			return;
 
 		int h = ClearMatch (new Vector2[2] { Vector2.left, Vector2.right });
